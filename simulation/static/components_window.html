@@ -596,7 +596,7 @@
                 image: "../images/Components/voltmeter.png",
                 description:
                     "It is connected in parallel across the MCB. The purpose of this voltmeter is to measure the voltage of the main supply.",
-                audio: "audio/voltmeter.wav"
+                audio: "../audio/voltmeter.wav"
             },
             
            
@@ -622,11 +622,39 @@
 
         let currentIndex = 0;
         let swapTimer = null;
+        let autoAdvanceTimer = null;
         let audioMode = "tts";
         let ttsState = "idle";
+        let speechToken = 0;
+        let activeSpeechToken = 0;
         let activeComponent = components[0];
         const autoPlayByDefault = !isEmbedded;
         let autoPlayOnChange = false;
+        const visitedComponents = new Set();
+        let completionSent = false;
+
+        function clearAutoAdvanceTimer() {
+            if (!autoAdvanceTimer) return;
+            clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
+        }
+
+        function markVisited(index) {
+            if (!Number.isFinite(index)) return;
+            visitedComponents.add(index);
+        }
+
+        function hasVisitedAllComponents() {
+            return visitedComponents.size >= components.length;
+        }
+
+        function sendCompletionIfReady() {
+            if (!isEmbedded || completionSent) return;
+            if (!hasVisitedAllComponents()) return;
+            if (currentIndex !== components.length - 1) return;
+            completionSent = true;
+            window.parent.postMessage({ type: "components-tour-complete" }, "*");
+        }
 
         function buildThumbs() {
             thumbsEl.innerHTML = "";
@@ -712,10 +740,31 @@
                 audioEl.currentTime = 0;
             }
             if (speechSupported) {
+                activeSpeechToken = 0;
                 window.speechSynthesis.cancel();
             }
             ttsState = "idle";
             updateAudioButton(false);
+        }
+
+        function handleAudioFinished() {
+            ttsState = "idle";
+            updateAudioButton(false);
+
+            if (!isEmbedded) return;
+
+            if (currentIndex < components.length - 1) {
+                clearAutoAdvanceTimer();
+                const fromIndex = currentIndex;
+                autoAdvanceTimer = setTimeout(() => {
+                    autoAdvanceTimer = null;
+                    if (currentIndex !== fromIndex) return;
+                    setActive(fromIndex + 1);
+                }, 500);
+                return;
+            }
+
+            sendCompletionIfReady();
         }
 
         function playAudio(options = {}) {
@@ -757,14 +806,20 @@
             }
 
             const utterance = new SpeechSynthesisUtterance(activeComponent.description);
+            const token = (speechToken += 1);
+            activeSpeechToken = token;
             ttsState = "playing";
             utterance.onend = () => {
+                if (token !== activeSpeechToken) return;
+                activeSpeechToken = 0;
                 ttsState = "idle";
-                updateAudioButton(false);
+                handleAudioFinished();
             };
             utterance.onerror = () => {
+                if (token !== activeSpeechToken) return;
+                activeSpeechToken = 0;
                 ttsState = "idle";
-                updateAudioButton(false);
+                handleAudioFinished();
             };
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
@@ -849,6 +904,8 @@
         function setActive(index, options = {}) {
             const safeIndex = Math.max(0, Math.min(components.length - 1, index));
             currentIndex = safeIndex;
+            markVisited(currentIndex);
+            clearAutoAdvanceTimer();
             updateControls();
 
             if (swapTimer) {
@@ -883,20 +940,27 @@
                     updateAudioButton(true);
                 }
             });
-            audioEl.addEventListener("ended", () => updateAudioButton(false));
+            audioEl.addEventListener("ended", () => handleAudioFinished());
             audioEl.addEventListener("pause", () => {
                 if (audioEl.currentTime === 0 || audioEl.ended) return;
                 updateAudioButton(false);
             });
             audioEl.addEventListener("error", () => {
+                updateAudioButton(false);
+
+                const shouldAutoPlay = autoPlayByDefault || autoPlayOnChange;
+
                 if (audioMode === "file" && speechSupported) {
                     audioMode = "tts";
                     setAudioStatus("Voice narration");
-                } else {
-                    setAudioStatus("Audio not available");
-                    if (audioBtn) audioBtn.disabled = true;
+                    if (shouldAutoPlay) {
+                        playAudio();
+                    }
+                    return;
                 }
-                updateAudioButton(false);
+
+                setAudioStatus("Audio not available");
+                if (audioBtn) audioBtn.disabled = true;
             });
         }
 
@@ -922,6 +986,7 @@
                     audioBtn?.click();
                 }
                 if (data.type === "component-audio-play") {
+                    autoPlayOnChange = true;
                     playAudio({ allowFallback: true });
                 }
                 if (data.type === "component-audio-pause") {
@@ -934,6 +999,7 @@
                 if (data.type === "component-audio-stop") {
                     stopAudio();
                     autoPlayOnChange = false;
+                    clearAutoAdvanceTimer();
                 }
             });
         }

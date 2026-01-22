@@ -536,9 +536,49 @@ h3 {
     0 12px 22px rgba(0, 0, 0, 0.22);
 }
 
+/* Highlight the Tap To Listen button after the components intro */
+@keyframes speakAttentionPulse {
+  0% {
+    box-shadow:
+      0 8px 18px rgba(15, 23, 42, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -3px 10px rgba(0, 0, 0, 0.4),
+      0 0 0 0 rgba(46, 130, 255, 0),
+      0 0 0 0 rgba(255, 196, 46, 0);
+  }
+  45% {
+    box-shadow:
+      0 8px 18px rgba(15, 23, 42, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -3px 10px rgba(0, 0, 0, 0.4),
+      0 0 0 6px rgba(46, 130, 255, 0.35),
+      0 0 18px 8px rgba(255, 196, 46, 0.25);
+  }
+  100% {
+    box-shadow:
+      0 8px 18px rgba(15, 23, 42, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -3px 10px rgba(0, 0, 0, 0.4),
+      0 0 0 0 rgba(46, 130, 255, 0),
+      0 0 0 0 rgba(255, 196, 46, 0);
+  }
+}
+
+.speak-btn.speak-attention {
+  outline: 3px solid rgba(46, 130, 255, 0.85);
+  filter: saturate(1.08);
+  animation: speakAttentionPulse 1.35s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .speak-btn.speak-attention {
+    animation: none;
+  }
+}
+
 /* =========================
    COMPONENT HOVER TOOLTIP
-========================= */
+ ========================= */
 @keyframes tooltipPop {
   0% { opacity: 0; transform: translateY(12px) scale(0.96) rotate(-0.5deg); }
   60% { opacity: 1; transform: translateY(-2px) scale(1.02) rotate(0.3deg); }
@@ -1579,6 +1619,9 @@ body.is-modal-open {
 #modalMessage {
   color: #3b2f24;
   white-space: pre-line;
+  text-align: left;
+  line-height: 1.55;
+  margin: 0;
 }
 
 .modal-box.danger {

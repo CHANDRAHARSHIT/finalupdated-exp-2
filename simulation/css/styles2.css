@@ -53,29 +53,29 @@
     inset 0 -3px 8px rgba(0, 0, 0, 0.12),
     0 6px 12px rgba(0, 0, 0, 0.18);
 }
- .point-R:hover,
- .point-B:hover,
- .point-L:hover,
- .point-F:hover,
- .point-A:hover,
- .point-C:hover,
- .point-D:hover,
-  .point-E:hover, 
- .point-G:hover, 
- .point-H:hover, 
- .point-I:hover, 
- .point-J:hover, 
- .point-K:hover,
- .point-A1:hover,
- .point-Z1:hover,
- .point-A3:hover,
- .point-Z3:hover,
- .point-A2:hover,
- .point-Z2:hover,
- .point-A4:hover,
- .point-Z4:hover, 
- .point-L1:hover  
- .point-L2:hover{
+.point-R:hover,
+.point-B:hover,
+.point-L:hover,
+.point-F:hover,
+.point-A:hover,
+.point-C:hover,
+.point-D:hover,
+.point-E:hover,
+.point-G:hover,
+.point-H:hover,
+.point-I:hover,
+.point-J:hover,
+.point-K:hover,
+.point-A1:hover,
+.point-Z1:hover,
+.point-A3:hover,
+.point-Z3:hover,
+.point-A2:hover,
+.point-Z2:hover,
+.point-A4:hover,
+.point-Z4:hover,
+.point-L1:hover,
+.point-L2:hover {
    transform: translateY(-2px);
    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.7),
      inset 0 -3px 8px rgba(0, 0, 0, 0.14),
@@ -83,29 +83,29 @@
    filter: saturate(1.04);
  }
 
- .point-R:active,
- .point-B:active,
- .point-L:active,
- .point-F:active,
- .point-A:active,
- .point-C:active,
- .point-D:active,
- .point-E:active, 
- .point-G:active, 
- .point-H:active, 
- .point-I:active, 
- .point-J:active, 
- .point-K:active,
- .point-A1:active,
- .point-Z1:active,
- .point-A3:active,
- .point-Z3:active,
- .point-A2:active,
- .point-Z2:active,
- .point-A4:active,
- .point-Z4:active  
- .point-L1:active  
- .point-L2:active  {
+.point-R:active,
+.point-B:active,
+.point-L:active,
+.point-F:active,
+.point-A:active,
+.point-C:active,
+.point-D:active,
+.point-E:active,
+.point-G:active,
+.point-H:active,
+.point-I:active,
+.point-J:active,
+.point-K:active,
+.point-A1:active,
+.point-Z1:active,
+.point-A3:active,
+.point-Z3:active,
+.point-A2:active,
+.point-Z2:active,
+.point-A4:active,
+.point-Z4:active,
+.point-L1:active,
+.point-L2:active   {
    transform: translateY(0);
    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.55),
      inset 0 -3px 8px rgba(0, 0, 0, 0.12),
@@ -272,22 +272,22 @@ top: 280px;
  }
 
  .point-F {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 70px;
-   top: 210px;
- }
-
- .point-A {
-   font-weight: bold;
-   position: absolute;
-   width: 24px;
-   height: 24px;
-   left: 100px;
-   top: 210px;
- }
+    font-weight: bold;
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    left: 100px;
+    top: 210px;
+  }
+ 
+  .point-A {
+    font-weight: bold;
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    left: 70px;
+    top: 210px;
+  }
 
  .point-C {
    font-weight: bold;

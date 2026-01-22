@@ -385,8 +385,8 @@ function setupJsPlumb() {
     pointB: BOTTOM_ANCHOR,
 
     pointL: BOTTOM_ANCHOR,
-    pointF: BOTTOM_ANCHOR,
     pointA: BOTTOM_ANCHOR,
+    pointF: BOTTOM_ANCHOR,
     pointC: BOTTOM_ANCHOR,
     pointD: BOTTOM_ANCHOR,
     pointE: BOTTOM_ANCHOR,
@@ -644,8 +644,8 @@ function setupJsPlumb() {
     "pointB-pointA2",
     "pointA2-pointZ2",
     "pointL-pointD",
-    "pointF-pointZ1",
     "pointA-pointA1",
+    "pointF-pointZ1",
     "pointL2-pointA4",
     "pointA4-pointZ4",
     "pointZ4-pointK",
@@ -660,6 +660,8 @@ function setupJsPlumb() {
     return [a, b].sort().join("-");
   }));
   const allowedConnections = new Set(requiredConnections);
+  // Explicitly allow A ↔ A1 even if normalization skips it
+  allowedConnections.add(connectionKey("pointA", "pointA1"));
   const requiredConnectionNumbers = new Map();
   requiredPairs.forEach((pair, index) => {
     const [a, b] = String(pair).split("-");
@@ -1422,7 +1424,7 @@ function setupJsPlumb() {
       if (suppressGuideDuringAutoConnect || isAutoConnecting) return;
 
       const made = connectionKey(info.sourceId, info.targetId);
-      if (!requiredConnections.has(made)) {
+      if (!requiredConnections.has(made) && !allowedConnections.has(made)) {
         const wrongA = formatPointSpeech(info.sourceId);
         const wrongB = formatPointSpeech(info.targetId);
         window.labSpeech.speak(
@@ -1635,6 +1637,7 @@ function voltageToAngle(voltageValue) {
   let addReadingAlertShown = false;
   let graphReadyAnnounced = false;
   let graphPlotAlertShown = false;
+  let graphPlotted = false;
 
   function speechIsActive() {
     return (
@@ -1659,8 +1662,9 @@ function voltageToAngle(voltageValue) {
   }
 
   function updateGraphControls() {
-    if (graphBtn) graphBtn.disabled = readingsRecorded.length < minGraphPoints;
-    if (reportBtn) reportBtn.disabled = readingsRecorded.length < minGraphPoints;
+    const enoughReadings = readingsRecorded.length >= minGraphPoints;
+    if (graphBtn) graphBtn.disabled = !enoughReadings;
+    if (reportBtn) reportBtn.disabled = !enoughReadings || !graphPlotted;
   }
 
   function enforceReady(action) {
@@ -1743,6 +1747,7 @@ function voltageToAngle(voltageValue) {
       speakOrAlert(`Please take at least ${minGraphPoints} readings in the table.`);
       return;
     }
+    graphPlotted = false;
 
     const currents = readingsRecorded.map(r => r.current);
     const voltages = readingsRecorded.map(r => r.voltage);
@@ -1789,6 +1794,7 @@ function voltageToAngle(voltageValue) {
         if (graphCanvas) graphCanvas.classList.add("is-plotting");
 
         window.Plotly.newPlot(graphPlot, [trace], layout, { displaylogo: false, responsive: true });
+        graphPlotted = true;
         stepGuide.complete("graph");
         updateGraphControls();
         if (!graphPlotAlertShown) {
@@ -1800,6 +1806,7 @@ function voltageToAngle(voltageValue) {
         );
       })
       .catch(() => {
+        graphPlotted = false;
         showPopup("Unable to load graphing library. Please check your connection and try again.", "Graph Error");
       });
   }
@@ -1817,6 +1824,10 @@ function voltageToAngle(voltageValue) {
     const tableEl = document.getElementById("observationTable");
     if (!tableEl) {
       speakOrAlert("Report table not found.");
+      return;
+    }
+    if (!graphPlotted) {
+      speakOrAlert("Please plot the graph before generating the report.");
       return;
     }
 
@@ -2140,6 +2151,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
     });
 
     addRowToTable(selectedIndex);
+    graphPlotted = false;
     if (!addReadingAlertShown) {
       addReadingAlertShown = true;
       showPopup("Reading added to the observation table.", "Observation");
@@ -2236,6 +2248,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
     addReadingAlertShown = false;
     graphReadyAnnounced = false;
     graphPlotAlertShown = false;
+    graphPlotted = false;
 
     if (observationBody) {
       observationBody.innerHTML = "";
@@ -2272,6 +2285,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
     updateRotorSpin();
     stepGuide.reset();
     updateGraphControls();
+    showPopup("Experiment has been reset. You can start again.", "Reset");
   }
 
   if (lampSelect) {
@@ -2612,6 +2626,12 @@ tr:nth-child(even) { background-color: #f8fbff; }
     const componentsFrame = modal.querySelector("iframe");
     const openBtns = document.querySelectorAll("[data-open-components]");
 
+    const COMPONENTS_COMPLETE_MESSAGE =
+      "Now that you are familiar with all the components used in this experiment, you may now start the experiment. An AI guide is available to assist you at every step.";
+    let componentsCompletionNotified = false;
+    let componentsTourCompleted = false;
+    let speakAttentionTimeoutId = null;
+
   // Keep "Skip" for the current tab only (shows again on full reload).
   const STORAGE_KEY = "vl_components_skipped";
   const STORAGE =
@@ -2637,30 +2657,50 @@ tr:nth-child(even) { background-color: #f8fbff; }
       }
     })();
 
-  function hasAutoPlayedAudio() {
-    if (!AUDIO_STORAGE) return false;
-    try {
-      return AUDIO_STORAGE.getItem(AUDIO_STORAGE_KEY) === "1";
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function markAutoPlayedAudio() {
-    if (!AUDIO_STORAGE) return;
-    try {
-      AUDIO_STORAGE.setItem(AUDIO_STORAGE_KEY, "1");
-    } catch (e) {}
-  }
-
   let frameReady = false;
-  let autoPlayPending = !hasAutoPlayedAudio();
+  let autoPlayPending = true; // always attempt autoplay on load
   let autoPlayRequested = false;
   let autoPlayRetryArmed = false;
 
+  function highlightTapToListen(durationMs = 12000) {
+    const speakBtn = document.querySelector(".speak-btn");
+    if (!speakBtn) return;
+
+    speakBtn.classList.add("speak-attention");
+
+    if (speakAttentionTimeoutId) {
+      window.clearTimeout(speakAttentionTimeoutId);
+    }
+
+    speakAttentionTimeoutId = window.setTimeout(() => {
+      speakBtn.classList.remove("speak-attention");
+      speakAttentionTimeoutId = null;
+    }, durationMs);
+
+    speakBtn.addEventListener(
+      "click",
+      () => {
+        speakBtn.classList.remove("speak-attention");
+        if (speakAttentionTimeoutId) {
+          window.clearTimeout(speakAttentionTimeoutId);
+          speakAttentionTimeoutId = null;
+        }
+      },
+      { once: true }
+    );
+  }
+
+  function maybeNotifyComponentsComplete({ skipped = false } = {}) {
+    if (skipped) return;
+    if (componentsCompletionNotified) return;
+    componentsCompletionNotified = true;
+
+    showPopup(COMPONENTS_COMPLETE_MESSAGE, "Instruction");
+    highlightTapToListen();
+  }
+
   function markAutoPlayComplete() {
     if (!autoPlayPending) return;
-    markAutoPlayedAudio();
     autoPlayPending = false;
     autoPlayRequested = false;
   }
@@ -2724,6 +2764,11 @@ tr:nth-child(even) { background-color: #f8fbff; }
     window.addEventListener("message", (event) => {
       if (!componentsFrame || event.source !== componentsFrame.contentWindow) return;
       const data = event.data || {};
+      if (data.type === "components-tour-complete") {
+        componentsTourCompleted = true;
+        closeComponentsModal({ skip: false });
+        return;
+      }
       if (data.type === "component-audio-state") {
         updateAudioControl(data.state || data);
         if (autoPlayPending && data.playing) {
@@ -2771,7 +2816,11 @@ tr:nth-child(even) { background-color: #f8fbff; }
         try {
           STORAGE.setItem(STORAGE_KEY, "1");
         } catch (e) {}
-    }
+      }
+
+      if (componentsTourCompleted) {
+        maybeNotifyComponentsComplete({ skipped: skip });
+      }
   }
 
   // Auto open when page loads

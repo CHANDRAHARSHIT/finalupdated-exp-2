@@ -556,7 +556,273 @@
         height: min(88vh, 620px);
       }
     }
+    .division {
+      display: flex;
+      flex-direction: row;
+      gap: 1.5rem;
+      height: 350px;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+   
+    }
+    #v1-card {
+      text-align: center;
+      height: 150px;
+      width: 30%;
+    }
+    #v2-card {
+      text-align: center;
+      height: 150px;
+      width: 30%;
+    }
 
+    /* 3D CTA cards */
+    .cta-card {
+      background: linear-gradient(135deg, #e8f5ff 0%, #d4edff 50%, #e8f5ff 100%);
+      color: #0b60a8;
+      border: 1px solid rgba(11, 96, 168, 0.22);
+      box-shadow: 0 16px 32px rgba(11, 96, 168, 0.16), 0 10px 24px rgba(11, 96, 168, 0.12);
+      transform: perspective(900px) translateZ(0);
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.4), transparent 55%);
+      transform: translateX(-20%);
+      transition: transform 220ms ease;
+      pointer-events: none;
+    }
+
+    .cta-card:hover {
+      transform: perspective(900px) translateZ(16px) translateY(-6px) rotateX(3deg) rotateY(-2deg);
+      box-shadow: 0 22px 44px rgba(11, 96, 168, 0.22), 0 12px 28px rgba(11, 96, 168, 0.16);
+      border-color: rgba(11, 96, 168, 0.35);
+    }
+
+    .cta-card:hover::after {
+      transform: translateX(0);
+    }
+
+    .cta-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      height: 100%;
+      color: #0b60a8;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      text-decoration: none;
+      text-shadow: 0 4px 18px rgba(11, 96, 168, 0.18);
+      transition: transform 160ms ease, color 160ms ease;
+    }
+
+    .cta-link svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .cta-card:hover .cta-link {
+      transform: translateY(-1px);
+      color: #084c8a;
+    }
+
+    @keyframes ctaAttentionPulse {
+      0%,
+      100% {
+        box-shadow:
+          0 16px 32px rgba(11, 96, 168, 0.16),
+          0 10px 24px rgba(11, 96, 168, 0.12),
+          0 0 0 0 rgba(46, 130, 255, 0),
+          0 0 0 0 rgba(255, 196, 46, 0);
+      }
+      45% {
+        box-shadow:
+          0 18px 38px rgba(11, 96, 168, 0.2),
+          0 12px 28px rgba(11, 96, 168, 0.14),
+          0 0 0 6px rgba(46, 130, 255, 0.35),
+          0 0 18px 8px rgba(255, 196, 46, 0.25);
+      }
+    }
+
+    .cta-card.cta-attention {
+      outline: 3px solid rgba(46, 130, 255, 0.85);
+      outline-offset: 4px;
+      animation: ctaAttentionPulse 1.35s ease-in-out infinite;
+    }
+
+    /* Video modal styling */
+    .video-modal-shell {
+      background: linear-gradient(135deg, #f7fbff 0%, #e8f3ff 45%, #fdfdff 100%);
+      border: 1px solid rgba(11, 96, 168, 0.18);
+      box-shadow: 0 24px 50px rgba(11, 96, 168, 0.18), 0 12px 24px rgba(11, 96, 168, 0.12);
+      border-radius: 22px;
+      position: relative;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .video-frame {
+      border-radius: 16px;
+      background: radial-gradient(circle at 30% 30%, rgba(11, 96, 168, 0.08), rgba(255, 255, 255, 0.94));
+      border: 1px solid rgba(11, 96, 168, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    .video-frame video {
+      background: transparent;
+    }
+
+    .video-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(11, 96, 168, 0.12);
+      color: #0b60a8;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.01em;
+      box-shadow: 0 6px 16px rgba(11, 96, 168, 0.12);
+    }
+
+    body.is-modal-open {
+      overflow: hidden;
+    }
+
+    /* Alert modal (same style as simulation popup) */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+      z-index: 7000;
+    }
+
+    .modal.show {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-box {
+      background: #fff;
+      padding: 26px 28px;
+      border-radius: 14px;
+      max-width: 520px;
+      width: min(520px, 92vw);
+      text-align: center;
+      border: 2px solid #B89B3E;
+      color: #2c1a0a;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      animation: slideFromTop 0.5s ease-in, pulse 1.5s infinite;
+    }
+
+    .modal-box h2 {
+      color: #2c1a0a;
+      margin-bottom: 10px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    #modalMessage {
+      color: #3b2f24;
+      white-space: pre-line;
+      text-align: left;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .modal-box.danger {
+      animation: slideFromTop 0.6s ease-out, pulse 1.5s infinite;
+    }
+
+    .modal-box.closing {
+      animation: slideToBottom 0.5s ease-in forwards;
+    }
+
+    .modal-close-btn {
+      margin-top: 15px;
+      padding: 10px 18px;
+      border: 1px solid #B89B3E;
+      background: linear-gradient(135deg, #2C2C2C, #3B3B3B);
+      color: #E6C36A;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.3s ease;
+    }
+
+    .modal-close-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 20px rgba(184, 155, 62, 0.4);
+      background: linear-gradient(135deg, #3B3B3B, #2C2C2C);
+    }
+
+    .modal-close-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 3px 8px rgba(184, 155, 62, 0.3);
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 35px rgba(140, 106, 72, 0.95);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
+      }
+    }
+
+    @keyframes slideFromTop {
+      0% {
+        transform: translateY(-120vh) scale(0.8);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideToBottom {
+      0% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(120vh);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -708,11 +974,31 @@
       </div>
 
       <!-- References Content -->
-    <section class="vl-card p-6 animate-fadeInUp">
-  <a href="./simulation/static/index.html" class="text-blue-600 underline hover:text-blue-800">
-    Link of Simulation
-  </a>
-</section>
+       <div class="division">
+    
+            <section id="v1-card" class="vl-card p-6 animate-fadeInUp cta-card">
+              <a
+                id="demo-video-trigger"
+                href="#"
+                class="cta-link"
+              >
+                <span>Demo Video</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
+                </svg>
+              </a>
+            </section>
+              <section id="v2-card" class="vl-card p-6 animate-fadeInUp cta-card">
+            <a href="./simulation/static/index.html" class="cta-link">
+              <span>Link Of Simulation</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </a>
+            </section>
+       </div>
 
     </main>
   </div>
@@ -726,6 +1012,50 @@
       </p>
     </div>
   </footer>
+
+  <!-- Demo Video Modal -->
+  <div
+    id="video-modal"
+    class="fixed inset-0 bg-white/70 backdrop-blur-sm hidden items-center justify-center z-[60] p-4"
+    aria-hidden="true"
+  >
+    <div class="video-modal-shell flex w-[80vw] h-[70vh] max-w-5xl">
+      <div class="video-badge">Intro preview</div>
+      <button
+        id="video-modal-close"
+        type="button"
+        aria-label="Close video"
+        class="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 rounded-full p-2 shadow-md border border-gray-200 transition z-10"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="video-frame">
+        <video
+          id="demo-video-player"
+          class="w-full h-full object-contain bg-transparent"
+          controls
+          preload="metadata"
+        >
+          <source src="./videos/intro.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Modal (matches simulation popup style) -->
+  <div id="warningModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
+    <div class="modal-box danger" role="document">
+      <h2 id="modalTitle">Alert</h2>
+      <p id="modalMessage"></p>
+      <button type="button" class="modal-close-btn" data-modal-close>OK</button>
+    </div>
+  </div>
+
+  <audio id="alertSound" preload="auto"></audio>
 
 
   <script>
@@ -743,6 +1073,219 @@
       sidebar.classList.add('-translate-x-full');
       overlay.classList.add('hidden');
     });
+  </script>
+
+  <script>
+    function showPopup(message, title = 'Alert') {
+      if (!message) return;
+      const modal = document.getElementById('warningModal');
+      if (!modal) {
+        window.alert(String(message));
+        return;
+      }
+
+      const box = modal.querySelector('.modal-box');
+      const msg = modal.querySelector('#modalMessage');
+      const ttl = modal.querySelector('#modalTitle');
+      const sound = document.getElementById('alertSound');
+
+      if (ttl) ttl.textContent = String(title || 'Alert');
+      if (msg) msg.textContent = String(message);
+
+      if (box) {
+        box.classList.remove('closing');
+        box.classList.add('danger');
+      }
+
+      modal.classList.add('show');
+      document.body.classList.add('is-modal-open');
+
+      if (sound && typeof sound.play === 'function') {
+        sound.currentTime = 0;
+        const playPromise = sound.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      }
+    }
+
+    function closePopup() {
+      const modal = document.getElementById('warningModal');
+      if (!modal) return;
+      const box = modal.querySelector('.modal-box');
+      const sound = document.getElementById('alertSound');
+
+      if (box) {
+        box.classList.add('closing');
+      }
+
+      window.setTimeout(() => {
+        modal.classList.remove('show');
+        if (box) {
+          box.classList.remove('closing');
+        }
+        document.body.classList.remove('is-modal-open');
+      }, 450);
+
+      if (sound && typeof sound.pause === 'function') {
+        sound.pause();
+      }
+    }
+
+    function isPopupOpen() {
+      const modal = document.getElementById('warningModal');
+      return !!(modal && modal.classList.contains('show'));
+    }
+
+    (function initAlertModal() {
+      const modal = document.getElementById('warningModal');
+      if (!modal) return;
+
+      const closeBtn = modal.querySelector('[data-modal-close]');
+      if (closeBtn) closeBtn.addEventListener('click', closePopup);
+
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          closePopup();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && isPopupOpen()) {
+          closePopup();
+        }
+      });
+    })();
+
+    (function initSimulationTabsAlert() {
+      const message =
+        "The Simulation section contains two tabs. The Demo tab provides a guided walkthrough on how to run the simulation, while the Simulation tab allows you to perform the experiment independently.\n\nClick on the Demo tab to view the demo.";
+
+      function highlightDemoTab(durationMs = 12000) {
+        const demoCard = document.getElementById('v1-card');
+        if (!demoCard) return;
+
+        demoCard.classList.add('cta-attention');
+
+        const clear = () => demoCard.classList.remove('cta-attention');
+        window.setTimeout(clear, durationMs);
+
+        const trigger = document.getElementById('demo-video-trigger');
+        if (trigger) trigger.addEventListener('click', clear, { once: true });
+      }
+
+      window.addEventListener(
+        'load',
+        () => {
+          showPopup(message, 'Instruction');
+          highlightDemoTab();
+        },
+        { once: true }
+      );
+    })();
+  </script>
+
+  <script>
+    // Demo video modal controls
+    const demoTrigger = document.getElementById('demo-video-trigger');
+    const videoModal = document.getElementById('video-modal');
+    const videoPlayer = document.getElementById('demo-video-player');
+    const videoCloseBtn = document.getElementById('video-modal-close');
+    const demoIncompleteMessage = 'to proceed further Please complete the demo first';
+    const DEMO_COMPLETE_STORAGE_KEY = 'vl_demo_video_completed';
+
+    function isDemoMarkedComplete() {
+      try {
+        return window.sessionStorage.getItem(DEMO_COMPLETE_STORAGE_KEY) === '1';
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function markDemoComplete() {
+      try {
+        window.sessionStorage.setItem(DEMO_COMPLETE_STORAGE_KEY, '1');
+      } catch (error) {}
+    }
+
+    function isDemoVideoComplete() {
+      if (!videoPlayer) return false;
+      if (videoPlayer.ended) return true;
+      const duration = Number(videoPlayer.duration);
+      const currentTime = Number(videoPlayer.currentTime);
+      if (Number.isFinite(duration) && duration > 0 && Number.isFinite(currentTime)) {
+        return currentTime >= Math.max(0, duration - 0.25);
+      }
+      return false;
+    }
+
+    function openVideoModal() {
+      videoModal.classList.remove('hidden');
+      videoModal.classList.add('flex');
+      document.body.classList.add('body-blurred');
+      videoPlayer.currentTime = 0;
+      videoPlayer.play().catch(() => {
+        /* Autoplay may be blocked; ignore errors */
+      });
+    }
+
+    function closeVideoModal({ fromEnded = false } = {}) {
+      const completed = fromEnded || isDemoVideoComplete() || isDemoMarkedComplete();
+      videoModal.classList.add('hidden');
+      videoModal.classList.remove('flex');
+      document.body.classList.remove('body-blurred');
+      videoPlayer.pause();
+
+      if (!completed) {
+        window.setTimeout(() => {
+          showPopup(demoIncompleteMessage, 'Instruction');
+        }, 50);
+      }
+    }
+
+    function guardSimulationLink(event) {
+      if (isDemoMarkedComplete()) return;
+      event.preventDefault();
+      showPopup(demoIncompleteMessage, 'Instruction');
+      const demoCard = document.getElementById('v1-card');
+      if (demoCard) demoCard.classList.add('cta-attention');
+    }
+
+    if (demoTrigger && videoModal && videoPlayer && videoCloseBtn) {
+      demoTrigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        openVideoModal();
+      });
+
+      videoCloseBtn.addEventListener('click', closeVideoModal);
+
+      videoModal.addEventListener('click', (event) => {
+        if (event.target === videoModal) {
+          closeVideoModal();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !videoModal.classList.contains('hidden')) {
+          closeVideoModal();
+        }
+      });
+
+      document
+        .querySelectorAll('a[href*="simulation/static/index.html"]')
+        .forEach((link) => link.addEventListener('click', guardSimulationLink));
+
+      const demoCompletionMessage =
+        "Well done! You've completed the demo. Now, click on the Simulation tab to perform the experiment at your own pace.";
+
+      videoPlayer.addEventListener('ended', () => {
+        markDemoComplete();
+        closeVideoModal({ fromEnded: true });
+        window.setTimeout(() => {
+          showPopup(demoCompletionMessage, 'Well done');
+        }, 50);
+      });
+    }
   </script>
 
   <div class="chatbot-widget">
