@@ -1076,11 +1076,17 @@
   </script>
 
   <script>
-    function showPopup(message, title = 'Alert') {
+    let popupOnClose = null;
+
+    function showPopup(message, title = 'Alert', options = {}) {
       if (!message) return;
+      const onClose = typeof options?.onClose === 'function' ? options.onClose : null;
+      popupOnClose = onClose;
+
       const modal = document.getElementById('warningModal');
       if (!modal) {
         window.alert(String(message));
+        if (onClose) onClose();
         return;
       }
 
@@ -1114,6 +1120,8 @@
       if (!modal) return;
       const box = modal.querySelector('.modal-box');
       const sound = document.getElementById('alertSound');
+      const onClose = popupOnClose;
+      popupOnClose = null;
 
       if (box) {
         box.classList.add('closing');
@@ -1125,6 +1133,7 @@
           box.classList.remove('closing');
         }
         document.body.classList.remove('is-modal-open');
+        if (onClose) onClose();
       }, 450);
 
       if (sound && typeof sound.pause === 'function') {
@@ -1183,6 +1192,25 @@
         { once: true }
       );
     })();
+
+    (function initSimulationLinkReminder() {
+      const reminderMessage = "I hope you’ve completed the demo.";
+      const links = document.querySelectorAll('a[href*="simulation/static/index.html"]');
+      if (!links.length) return;
+
+      links.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          const url = link.getAttribute('href') || link.href;
+          if (!url) return;
+          event.preventDefault();
+          showPopup(reminderMessage, 'Reminder', {
+            onClose: () => {
+              window.location.href = url;
+            }
+          });
+        });
+      });
+    })();
   </script>
 
   <script>
@@ -1192,21 +1220,6 @@
     const videoPlayer = document.getElementById('demo-video-player');
     const videoCloseBtn = document.getElementById('video-modal-close');
     const demoIncompleteMessage = 'to proceed further Please complete the demo first';
-    const DEMO_COMPLETE_STORAGE_KEY = 'vl_demo_video_completed';
-
-    function isDemoMarkedComplete() {
-      try {
-        return window.sessionStorage.getItem(DEMO_COMPLETE_STORAGE_KEY) === '1';
-      } catch (error) {
-        return false;
-      }
-    }
-
-    function markDemoComplete() {
-      try {
-        window.sessionStorage.setItem(DEMO_COMPLETE_STORAGE_KEY, '1');
-      } catch (error) {}
-    }
 
     function isDemoVideoComplete() {
       if (!videoPlayer) return false;
@@ -1230,7 +1243,7 @@
     }
 
     function closeVideoModal({ fromEnded = false } = {}) {
-      const completed = fromEnded || isDemoVideoComplete() || isDemoMarkedComplete();
+      const completed = fromEnded || isDemoVideoComplete();
       videoModal.classList.add('hidden');
       videoModal.classList.remove('flex');
       document.body.classList.remove('body-blurred');
@@ -1241,14 +1254,6 @@
           showPopup(demoIncompleteMessage, 'Instruction');
         }, 50);
       }
-    }
-
-    function guardSimulationLink(event) {
-      if (isDemoMarkedComplete()) return;
-      event.preventDefault();
-      showPopup(demoIncompleteMessage, 'Instruction');
-      const demoCard = document.getElementById('v1-card');
-      if (demoCard) demoCard.classList.add('cta-attention');
     }
 
     if (demoTrigger && videoModal && videoPlayer && videoCloseBtn) {
@@ -1271,15 +1276,10 @@
         }
       });
 
-      document
-        .querySelectorAll('a[href*="simulation/static/index.html"]')
-        .forEach((link) => link.addEventListener('click', guardSimulationLink));
-
       const demoCompletionMessage =
         "Well done! You've completed the demo. Now, click on the Simulation tab to perform the experiment at your own pace.";
 
       videoPlayer.addEventListener('ended', () => {
-        markDemoComplete();
         closeVideoModal({ fromEnded: true });
         window.setTimeout(() => {
           showPopup(demoCompletionMessage, 'Well done');
