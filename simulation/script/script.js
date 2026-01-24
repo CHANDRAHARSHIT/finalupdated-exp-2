@@ -1420,6 +1420,7 @@ function setupJsPlumb() {
     });
 
     jsPlumb.bind("connection", function (info) {
+      
       if (!guideActive) return;
       if (suppressGuideDuringAutoConnect || isAutoConnecting) return;
 
@@ -2626,12 +2627,6 @@ tr:nth-child(even) { background-color: #f8fbff; }
     const componentsFrame = modal.querySelector("iframe");
     const openBtns = document.querySelectorAll("[data-open-components]");
 
-    const COMPONENTS_COMPLETE_MESSAGE =
-      "Now that you are familiar with all the components used in this experiment, you may now start the experiment. An AI guide is available to assist you at every step.";
-    let componentsCompletionNotified = false;
-    let componentsTourCompleted = false;
-    let speakAttentionTimeoutId = null;
-
   // Keep "Skip" for the current tab only (shows again on full reload).
   const STORAGE_KEY = "vl_components_skipped";
   const STORAGE =
@@ -2657,50 +2652,30 @@ tr:nth-child(even) { background-color: #f8fbff; }
       }
     })();
 
+  function hasAutoPlayedAudio() {
+    if (!AUDIO_STORAGE) return false;
+    try {
+      return AUDIO_STORAGE.getItem(AUDIO_STORAGE_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markAutoPlayedAudio() {
+    if (!AUDIO_STORAGE) return;
+    try {
+      AUDIO_STORAGE.setItem(AUDIO_STORAGE_KEY, "1");
+    } catch (e) {}
+  }
+
   let frameReady = false;
-  let autoPlayPending = true; // always attempt autoplay on load
+  let autoPlayPending = !hasAutoPlayedAudio();
   let autoPlayRequested = false;
   let autoPlayRetryArmed = false;
 
-  function highlightTapToListen(durationMs = 12000) {
-    const speakBtn = document.querySelector(".speak-btn");
-    if (!speakBtn) return;
-
-    speakBtn.classList.add("speak-attention");
-
-    if (speakAttentionTimeoutId) {
-      window.clearTimeout(speakAttentionTimeoutId);
-    }
-
-    speakAttentionTimeoutId = window.setTimeout(() => {
-      speakBtn.classList.remove("speak-attention");
-      speakAttentionTimeoutId = null;
-    }, durationMs);
-
-    speakBtn.addEventListener(
-      "click",
-      () => {
-        speakBtn.classList.remove("speak-attention");
-        if (speakAttentionTimeoutId) {
-          window.clearTimeout(speakAttentionTimeoutId);
-          speakAttentionTimeoutId = null;
-        }
-      },
-      { once: true }
-    );
-  }
-
-  function maybeNotifyComponentsComplete({ skipped = false } = {}) {
-    if (skipped) return;
-    if (componentsCompletionNotified) return;
-    componentsCompletionNotified = true;
-
-    showPopup(COMPONENTS_COMPLETE_MESSAGE, "Instruction");
-    highlightTapToListen();
-  }
-
   function markAutoPlayComplete() {
     if (!autoPlayPending) return;
+    markAutoPlayedAudio();
     autoPlayPending = false;
     autoPlayRequested = false;
   }
@@ -2764,11 +2739,6 @@ tr:nth-child(even) { background-color: #f8fbff; }
     window.addEventListener("message", (event) => {
       if (!componentsFrame || event.source !== componentsFrame.contentWindow) return;
       const data = event.data || {};
-      if (data.type === "components-tour-complete") {
-        componentsTourCompleted = true;
-        closeComponentsModal({ skip: false });
-        return;
-      }
       if (data.type === "component-audio-state") {
         updateAudioControl(data.state || data);
         if (autoPlayPending && data.playing) {
@@ -2788,6 +2758,44 @@ tr:nth-child(even) { background-color: #f8fbff; }
             label: "Tap to enable audio"
           });
         }
+        return;
+      }
+      if (data.type === "components-tour-complete") {
+        closeComponentsModal({ skip: true });
+
+        const speakBtn = document.querySelector(".speak-btn");
+        if (speakBtn) {
+          const ATTENTION_CLASS = "speak-attention";
+          speakBtn.classList.add(ATTENTION_CLASS);
+
+          const clearAttention = () => {
+            speakBtn.classList.remove(ATTENTION_CLASS);
+          };
+
+          speakBtn.addEventListener("click", clearAttention, { once: true });
+        }
+
+        const message =
+          "Now that you are familiar with all the components used in this experiment, you may now start the experiment.\n\nAn AI guide is available to assist you at every step.";
+        showPopup(message, "Instruction");
+
+        const modalCloseBtn = document.querySelector(
+          "#warningModal [data-modal-close]"
+        );
+        if (modalCloseBtn && speakBtn) {
+          modalCloseBtn.addEventListener(
+            "click",
+            () => {
+              setTimeout(() => {
+                try {
+                  speakBtn.focus({ preventScroll: true });
+                } catch (e) {}
+              }, 520);
+            },
+            { once: true }
+          );
+        }
+        return;
       }
     });
 
@@ -2816,11 +2824,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
         try {
           STORAGE.setItem(STORAGE_KEY, "1");
         } catch (e) {}
-      }
-
-      if (componentsTourCompleted) {
-        maybeNotifyComponentsComplete({ skipped: skip });
-      }
+    }
   }
 
   // Auto open when page loads
