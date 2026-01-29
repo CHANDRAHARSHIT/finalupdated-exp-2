@@ -6,6 +6,7 @@
   <title>Virtual Labs | Electrical Machines Lab - References</title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./alert-theme.css">
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -699,166 +700,16 @@
       box-shadow: 0 6px 16px rgba(11, 96, 168, 0.12);
     }
 
-    body.is-modal-open {
-      overflow: hidden;
-    }
-
-    /* Alert modal (same style as simulation popup) */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-      z-index: 7000;
-    }
-
-    .modal.show {
-      visibility: visible;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-
-    .modal-box {
-      background: #fff;
-      padding: 26px 28px;
-      border-radius: 14px;
-      max-width: 520px;
-      width: min(520px, 92vw);
-      text-align: center;
-      border: 2px solid #B89B3E;
-      color: #2c1a0a;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
-      animation: slideFromTop 0.5s ease-in, pulse 1.5s infinite;
-    }
-
-    .modal-box h2 {
-      color: #2c1a0a;
-      margin-bottom: 10px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-    }
-
-    #modalMessage {
-      color: #3b2f24;
-      white-space: pre-line;
-      text-align: left;
-      line-height: 1.55;
-      margin: 0;
-    }
-
-    .modal-box.danger {
-      animation: slideFromTop 0.6s ease-out, pulse 1.5s infinite;
-    }
-
-    .modal-box.closing {
-      animation: slideToBottom 0.5s ease-in forwards;
-    }
-
-    .modal-close-btn {
-      margin-top: 15px;
-      padding: 10px 18px;
-      border: 1px solid #B89B3E;
-      background: linear-gradient(135deg, #2C2C2C, #3B3B3B);
-      color: #E6C36A;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.3s ease;
-    }
-
-    .modal-actions {
-      margin-top: 15px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .modal-actions .modal-close-btn {
-      margin-top: 0;
-      min-width: 110px;
-    }
-
-    .modal-secondary-btn {
-      background: linear-gradient(135deg, #ffffff, #f3f4f6);
-      color: #1f2937;
-      border-color: rgba(184, 155, 62, 0.65);
-    }
-
-    .modal-close-btn.modal-secondary-btn:hover {
-      background: linear-gradient(135deg, #f9fafb, #ffffff);
-      color: #111827;
-    }
-
-    .modal-close-btn:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 8px 20px rgba(184, 155, 62, 0.4);
-      background: linear-gradient(135deg, #3B3B3B, #2C2C2C);
-    }
-
-    .modal-close-btn:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 3px 8px rgba(184, 155, 62, 0.3);
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
-      }
-      50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 35px rgba(140, 106, 72, 0.95);
-      }
-      100% {
-        transform: scale(1);
-        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
-      }
-    }
-
-    @keyframes slideFromTop {
-      0% {
-        transform: translateY(-120vh) scale(0.8);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideToBottom {
-      0% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(120vh);
-        opacity: 0;
-      }
-    }
   </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen">
 
 
-  <!-- HEADER -->
+   <!-- HEADER -->
      <header class="vl-header shadow-xl fixed top-0 left-0 right-0 z-50">
     <div class="header-inner px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between py-1 w-full">
-        <!-- Logo Section - Absolute Left Corner -->
+      <div class="flex items-center justify-between py-1 w-full gap-3">
         <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline"> <!-- Made logo clickable -->
           <img 
             src="./images/image.png" 
@@ -873,7 +724,6 @@
           </div>
         </a>
 
-        <!-- Mobile Menu Button - Right Side -->
         <button 
           id="mobile-menu-toggle" 
           class="lg:hidden text-white p-2 menu-button"
@@ -884,11 +734,11 @@
           </svg>
         </button>
 
-        <!-- Desktop Navigation (Optional) -->
-         <nav class="top-nav hidden lg:flex items-center">
-            <a href="../../main.html" class="nav-link">Home</a>
-            <a href="#" class="nav-link">Contact Us</a>
-          </nav>
+        <nav class="top-nav hidden lg:flex items-center gap-2 lg:gap-3">
+          <a href="../../main.html" class="nav-link">Home</a>
+          <a href="user_input.html?return=simulation.html" class="nav-link" data-user-input-link data-redirect-return="simulation.html">User Input</a>
+          <a href="progressreport.html" class="nav-link">Progress Report</a>
+        </nav>
       </div>
     </div>
   </header>
@@ -931,7 +781,7 @@
     Procedure
   </a>
 
-  <a href="./simulation/static/index.html" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
+    <a href="./simulation/static/index.html" target="_blank" rel="noreferrer noopener" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
     <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
         d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -962,14 +812,14 @@
     </svg>
     Contributors
   </a>
-
-  <a href="aim.html#progressreport" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
+  <a href="progressreport.html" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
     <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
         d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
     </svg>
     Progress Report
   </a>
+
         </nav>
       </div>
     </aside>
@@ -1016,7 +866,7 @@
               </a>
             </section>
               <section id="v2-card" class="vl-card p-6 animate-fadeInUp cta-card">
-            <a href="./simulation/static/index.html" class="cta-link">
+            <a href="./simulation/static/index.html" target="_blank" rel="noreferrer noopener" class="cta-link">
               <span>Link Of Simulation</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14"></path>
@@ -1074,7 +924,7 @@
 
   <!-- Alert Modal (matches simulation popup style) -->
   <div id="warningModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
-    <div class="modal-box danger" role="document">
+    <div class="modal-box" role="document">
       <h2 id="modalTitle">Alert</h2>
       <p id="modalMessage"></p>
       <div class="modal-actions" data-modal-actions hidden>
@@ -1113,11 +963,12 @@
 
     function showPopup(message, title = 'Alert', options = {}) {
       if (!message) return;
-      const onClose = typeof options?.onClose === 'function' ? options.onClose : null;
+      const opts = options || {};
+      const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
       popupOnClose = onClose;
-      popupMode = options?.mode === 'confirm' ? 'confirm' : 'alert';
-      popupOnYes = typeof options?.onYes === 'function' ? options.onYes : null;
-      popupOnNo = typeof options?.onNo === 'function' ? options.onNo : null;
+      popupMode = opts.mode === 'confirm' ? 'confirm' : 'alert';
+      popupOnYes = typeof opts.onYes === 'function' ? opts.onYes : null;
+      popupOnNo = typeof opts.onNo === 'function' ? opts.onNo : null;
 
       const modal = document.getElementById('warningModal');
       if (!modal) {
@@ -1144,19 +995,24 @@
       if (ttl) ttl.textContent = String(title || 'Alert');
       if (msg) msg.textContent = String(message);
 
-      if (popupMode === 'confirm') {
-        if (actions) actions.hidden = false;
-        if (okBtn) okBtn.hidden = true;
-        window.setTimeout(() => yesBtn?.focus?.(), 0);
-      } else {
-        if (actions) actions.hidden = true;
-        if (okBtn) okBtn.hidden = false;
-        window.setTimeout(() => okBtn?.focus?.(), 0);
+      if (actions) {
+        const shouldShowActions = popupMode === 'confirm';
+        actions.hidden = !shouldShowActions;
+        actions.style.display = shouldShowActions ? 'flex' : 'none';
       }
+      if (okBtn) {
+        okBtn.hidden = popupMode === 'confirm';
+        okBtn.style.display = popupMode === 'confirm' ? 'none' : 'inline-flex';
+      }
+      window.setTimeout(() => {
+        if (popupMode === 'confirm') yesBtn?.focus?.();
+        else okBtn?.focus?.();
+      }, 0);
 
       if (box) {
         box.classList.remove('closing');
-        box.classList.add('danger');
+        box.classList.remove('danger');
+        if (opts.variant === 'danger') box.classList.add('danger');
       }
 
       modal.classList.add('show');
@@ -1280,12 +1136,12 @@
           const url = link.getAttribute('href') || link.href;
           if (!url) return;
           event.preventDefault();
-          showPopup(reminderMessage, 'Reminder', {
-            mode: 'confirm',
-            onYes: () => {
-              window.location.href = url;
-            }
-          });
+        showPopup(reminderMessage, 'Reminder', {
+          mode: 'confirm',
+          onYes: () => {
+            window.open(url, '_blank', 'noopener');
+          }
+        });
         });
       });
     })();
@@ -1471,6 +1327,7 @@
   </script>   
 
 
+  <script src="./user_input_modal.js"></script>
 </body>
 </html>
 

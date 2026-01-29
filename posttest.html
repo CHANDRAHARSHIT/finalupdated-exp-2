@@ -6,6 +6,7 @@
   <title>Virtual Labs | Electrical Machines Lab - Theory</title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./alert-theme.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body {
@@ -479,130 +480,6 @@
       margin-bottom: 1rem; /* Consistent paragraph spacing */
       text-indent: 0; /* No indentation, use spacing instead */
     }
-    /* Alert modal (same style as simulation) */
-    body.is-modal-open {
-      overflow: hidden;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-      z-index: 7000;
-    }
-
-    .modal.show {
-      visibility: visible;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-
-    .modal-box {
-      background: #fff;
-      padding: 26px 28px;
-      border-radius: 14px;
-      max-width: 520px;
-      width: min(520px, 92vw);
-      text-align: center;
-      border: 2px solid #B89B3E;
-      color: #2c1a0a;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
-      animation: slideFromTop 0.5s ease-in, pulse 1.5s infinite;
-    }
-
-    .modal-box h2 {
-      color: #2c1a0a;
-      margin-bottom: 10px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-    }
-
-    #modalMessage {
-      color: #3b2f24;
-      white-space: pre-line;
-      text-align: left;
-      line-height: 1.55;
-      margin: 0;
-    }
-
-    .modal-box.danger {
-      animation: slideFromTop 0.6s ease-out, pulse 1.5s infinite;
-    }
-
-    .modal-box.closing {
-      animation: slideToBottom 0.5s ease-in forwards;
-    }
-
-    .modal-close-btn {
-      margin-top: 15px;
-      padding: 10px 18px;
-      border: 1px solid #B89B3E;
-      background: linear-gradient(135deg, #2C2C2C, #3B3B3B);
-      color: #E6C36A;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.3s ease;
-    }
-
-    .modal-close-btn:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 8px 20px rgba(184, 155, 62, 0.4);
-      background: linear-gradient(135deg, #3B3B3B, #2C2C2C);
-    }
-
-    .modal-close-btn:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 3px 8px rgba(184, 155, 62, 0.3);
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
-      }
-      50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 35px rgba(140, 106, 72, 0.95);
-      }
-      100% {
-        transform: scale(1);
-        box-shadow: 0 0 15px rgba(140, 106, 72, 0.8);
-      }
-    }
-
-    @keyframes slideFromTop {
-      0% {
-        transform: translateY(-120vh) scale(0.8);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideToBottom {
-      0% {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(120vh);
-        opacity: 0;
-      }
-    }
     @media (max-width: 640px) {
       .chatbot-widget {
         bottom: 16px;
@@ -624,11 +501,10 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- HEADER -->
-     <header class="vl-header shadow-xl fixed top-0 left-0 right-0 z-50">
+  <header class="vl-header shadow-xl fixed top-0 left-0 right-0 z-50">
     <div class="header-inner px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between py-1 w-full">
-        <!-- Logo Section - Absolute Left Corner -->
-        <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline"> <!-- Made logo clickable -->
+      <div class="flex items-center justify-between py-1 w-full gap-3">
+        <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline">
           <img 
              src="./images/image.png" 
             alt="Virtual Labs Logo" 
@@ -636,13 +512,11 @@
             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%230b60a8%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22%3EVL%3C/text%3E%3C/svg%3E'"
           >
           <div class="logo-text">
-          <h1 class="logo-title text-base sm:text-lg lg:text-xl">Virtual Labs</h1>
-          <p class="logo-subtitle text-[10px] sm:text-xs lg:text-sm">IIT Roorkee</p>
-
+            <h1 class="logo-title text-base sm:text-lg lg:text-xl">Virtual Labs</h1>
+            <p class="logo-subtitle text-[10px] sm:text-xs lg:text-sm">IIT Roorkee</p>
           </div>
         </a>
 
-        <!-- Mobile Menu Button - Right Side -->
         <button 
           id="mobile-menu-toggle" 
           class="lg:hidden text-white p-2 menu-button"
@@ -653,11 +527,11 @@
           </svg>
         </button>
 
-        <!-- Desktop Navigation (Optional) -->
-         <nav class="top-nav hidden lg:flex items-center">
-            <a href="../../main.html" class="nav-link">Home</a>
-            <a href="#" class="nav-link">Contact Us</a>
-          </nav>
+        <nav class="top-nav hidden lg:flex items-center gap-2 lg:gap-3">
+          <a href="../../main.html" class="nav-link">Home</a>
+          <a href="user_input.html?return=posttest.html" class="nav-link" data-user-input-link data-redirect-return="posttest.html">User Input</a>
+          <a href="progressreport.html" class="nav-link">Progress Report</a>
+        </nav>
       </div>
     </div>
   </header>
@@ -724,7 +598,7 @@
     </svg>
     Contributors
   </a>
-  <a href="aim.html#progressreport" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
+  <a href="progressreport.html" class="menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group">
     <svg class="w-5 h-5 mr-3 opacity-70 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
         d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
@@ -830,6 +704,7 @@ const refreshBtn = document.getElementById("refresh-btn");
 const checkBtn = document.getElementById("check-btn");
 
 let currentSetIndices = []; // indices into `questions` array for the current shown set
+let attemptUsed = false;
 
 /* ------------------ UTIL: pick random unique set ------------------ */
 function pickRandomSet() {
@@ -868,12 +743,20 @@ function showPage() {
     container.appendChild(div);
     // attach change listeners to save selection into the question object
     div.querySelectorAll("input[type='radio']").forEach(inp => {
-      inp.addEventListener("change", e => {
-        q.selected = e.target.value;
+      inp.addEventListener("change", () => {
+        if (attemptUsed) return;
+        q.selected = inp.value;
+        lockQuestionInputs(div);
       });
     });
   });
   result.innerHTML = "";
+}
+
+function lockQuestionInputs(div) {
+  div.querySelectorAll("input[type='radio']").forEach(input => {
+    input.disabled = true;
+  });
 }
 
 let popupOnClose = null;
@@ -968,8 +851,26 @@ function isPopupOpen() {
   });
 })();
 
+/* ------------------ ATTEMPT GUARD ------------------ */
+function attemptAlreadyUsedAlert() {
+  showPopup("You have already submitted the posttest. You cannot change answers or retry.", "Notice");
+}
+
+function finalizeAttempt() {
+  attemptUsed = true;
+  refreshBtn.disabled = true;
+  checkBtn.disabled = true;
+  container.querySelectorAll("input[type='radio']").forEach(input => {
+    input.disabled = true;
+  });
+}
+
 /* ------------------ CHECK ANSWERS for CURRENT SET ------------------ */
 function checkAnswers() {
+  if (attemptUsed) {
+    attemptAlreadyUsedAlert();
+    return;
+  }
   const unanswered = currentSetIndices.filter((qIndex) => {
     const q = questions[qIndex];
     return !container.querySelector(`input[name="q${q.id}"]:checked`);
@@ -1012,6 +913,8 @@ function checkAnswers() {
   });
 
   result.innerHTML = `Your Score: ${score} / ${size}`;
+  result.classList.remove("text-green-600", "text-red-600");
+  result.classList.add(score === size ? "text-green-600" : "text-red-600");
 
   try {
     localStorage.setItem("vlab_exp2_posttest_score", String(score));
@@ -1036,6 +939,8 @@ function checkAnswers() {
     data["vlab_exp2_posttest_updated_at"] = String(Date.now());
     window.name = PREFIX + JSON.stringify(data);
   } catch (e) {}
+
+  finalizeAttempt();
 }
 
 /* ------------------ BUTTON BINDINGS ------------------ */
@@ -1161,5 +1066,6 @@ pickRandomSet();
   </script>   
 
 
+  <script src="./user_input_modal.js"></script>
 </body>
 </html>

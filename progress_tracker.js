@@ -12,6 +12,16 @@
   const VERSION = 1;
 
   const nowISO = () => new Date().toISOString();
+  const GENERAL_PROGRESS_KEYS = [
+    "vlab_exp2_pretest_score",
+    "vlab_exp2_pretest_total",
+    "vlab_exp2_pretest_updated_at",
+    "vlab_exp2_posttest_score",
+    "vlab_exp2_posttest_total",
+    "vlab_exp2_posttest_updated_at",
+    "vlab_exp2_simulation_report_html",
+    "vlab_exp2_simulation_report_updated_at"
+  ];
 
   function safeParse(json, fallback) {
     try {
@@ -19,6 +29,34 @@
       return v && typeof v === "object" ? v : fallback;
     } catch {
       return fallback;
+    }
+  }
+
+  function normalizeEmail(email) {
+    if (!email || typeof email !== "string") return "";
+    return email.trim().toLowerCase();
+  }
+
+  function computeUserHash(email) {
+    const normalized = normalizeEmail(email);
+    if (!normalized) return "";
+
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i += 1) {
+      hash = ((hash << 5) - hash) + normalized.charCodeAt(i);
+      hash |= 0;
+    }
+    return `u${(hash >>> 0).toString(16).padStart(8, "0")}`;
+  }
+
+  function clearGeneralProgressKeys() {
+    if (typeof localStorage === "undefined") return;
+    try {
+      for (const key of GENERAL_PROGRESS_KEYS) {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // ignore storage failures
     }
   }
 
@@ -35,8 +73,19 @@
         reportViewedAt: null
       },
       pages: {}, // { "aim.html": { firstEnter, lastExit, timeMs, visits } }
-      steps: []  // [{ name, ts, meta }]
+      steps: [], // [{ name, ts, meta }]
+      userHistory: []
     };
+  }
+
+  function ensureHistory(state) {
+    if (!Array.isArray(state.userHistory)) state.userHistory = [];
+  }
+
+  function findHistoryEntry(state, normalizedEmail) {
+    if (!normalizedEmail) return null;
+    ensureHistory(state);
+    return state.userHistory.find(entry => entry.email === normalizedEmail) || null;
   }
 
   function load() {
@@ -50,7 +99,43 @@
     if (!parsed.timestamps) parsed.timestamps = baseState().timestamps;
     if (!parsed.pages) parsed.pages = {};
     if (!parsed.steps) parsed.steps = [];
+    if (!Array.isArray(parsed.userHistory)) parsed.userHistory = [];
     return { ...baseState(), ...parsed };
+  }
+
+  function recordUserHistory(state, user) {
+    const normalizedEmail = normalizeEmail(user?.email);
+    if (!normalizedEmail) return false;
+    ensureHistory(state);
+
+    const now = nowISO();
+    const existing = state.userHistory.find(entry => entry.email === normalizedEmail);
+    if (existing) {
+      existing.name = (user?.name || "").trim();
+      existing.designation = (user?.designation || "").trim();
+      existing.lastSeen = now;
+      return false;
+    }
+
+    state.userHistory.push({
+      email: normalizedEmail,
+      name: (user?.name || "").trim(),
+      designation: (user?.designation || "").trim(),
+      firstSeen: now,
+      lastSeen: now
+    });
+    return true;
+  }
+
+  function findUserByEmail(email) {
+    const state = load();
+    const normalizedEmail = normalizeEmail(email);
+    const entry = findHistoryEntry(state, normalizedEmail);
+    return entry ? Object.assign({}, entry) : null;
+  }
+
+  function isUserEmailNew(email) {
+    return !findUserByEmail(email);
   }
 
   function save(state) {
@@ -149,15 +234,36 @@
   }
 
   function setUser(user) {
-    const state = load();
-    state.user = {
+    const trimmedUser = {
       name: (user?.name || "").trim(),
       email: (user?.email || "").trim(),
-      designation: (user?.designation || "").trim(),
+      designation: (user?.designation || "").trim()
+    };
+    const normalizedEmail = normalizeEmail(trimmedUser.email);
+
+    const state = load();
+    const isNewUserByEmail = recordUserHistory(state, trimmedUser);
+
+    state.user = {
+      ...trimmedUser,
       submittedAt: nowISO()
     };
-    // Once submitted, do not keep "declined" state
     state.flags.reportDeclined = false;
+
+    try {
+      if (normalizedEmail) {
+        localStorage.setItem("vlab_exp2_active_user_hash", computeUserHash(normalizedEmail));
+      } else {
+        localStorage.removeItem("vlab_exp2_active_user_hash");
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    if (isNewUserByEmail && normalizedEmail) {
+      clearGeneralProgressKeys();
+    }
+
     save(state);
   }
 
@@ -217,6 +323,8 @@
     getState: load,
     saveState: save,
     formatMs,
+    findUserByEmail,
+    isUserEmailNew,
     resetAll
   };
 })();

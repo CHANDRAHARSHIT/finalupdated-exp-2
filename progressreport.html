@@ -5,51 +5,200 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Progress Report</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./alert-theme.css">
 </head>
 <body class="min-h-screen bg-slate-50">
+  <header class="vl-header shadow-xl fixed top-0 left-0 right-0 z-50">
+    <div class="header-inner px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between py-1 w-full gap-3">
+        <a href="../../main.html" class="logo-container hover:no-underline focus:no-underline">
+          <img
+            src="./images/image.png"
+            alt="Virtual Labs Logo"
+            class="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl object-contain bg-white p-1.5 logo-glow"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%233b82f6%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22%3EVL%3C/text%3E%3C/svg%3E'"
+          >
+          <div class="logo-text">
+            <h1 class="logo-title text-base sm:text-lg lg:text-xl">Virtual Labs</h1>
+            <p class="logo-subtitle text-[10px] sm:text-xs lg:text-sm">IIT Roorkee</p>
+          </div>
+        </a>
+
+        <button
+          id="mobile-menu-toggle"
+          class="lg:hidden text-white p-2 menu-button"
+          aria-label="Toggle menu"
+        >
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <nav class="top-nav hidden lg:flex items-center gap-2 lg:gap-3">
+          <a href="../../main.html" class="nav-link">Home</a>
+          <a href="user_input.html?return=progressreport.html" class="nav-link" data-user-input-link data-redirect-return="progressreport.html">User Input</a>
+          <a href="progressreport.html" class="nav-link">Progress Report</a>
+        </nav>
+      </div>
+    </div>
+  </header>
   <script src="./progress_tracker.js"></script>
 
-  <div class="max-w-5xl mx-auto px-4 py-10">
-    <div class="flex items-center justify-between gap-3 mb-5">
-      <h1 class="text-2xl font-bold text-slate-900">Progress Report</h1>
-      <div class="flex gap-2">
-        <button id="printBtn" class="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-black">
-          Print
-        </button>
-        <button id="downloadBtn" class="px-4 py-2 rounded-lg bg-slate-700 text-white font-semibold hover:bg-slate-800">
-          Download Report
-        </button>
-        <button id="resetBtn" class="px-4 py-2 rounded-lg border border-slate-300 font-semibold text-slate-700 hover:bg-slate-100">
-          Reset Data
-        </button>
+  <div class="max-w-5xl mx-auto px-4 py-12 pt-24">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div>
+        <p class="text-sm uppercase tracking-[0.2em] text-slate-500 font-semibold">Session Summary</p>
+        <h1 class="text-3xl font-bold text-slate-900">Progress Report</h1>
+        <p class="text-slate-600 mt-1">Snapshot of your saved user details, timing, and assessment scores.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button id="printBtn" class="px-4 py-2 rounded-lg bg-slate-900 text-white font-semibold hover:bg-black shadow-md">Print</button>
+        <button id="downloadBtn" class="px-4 py-2 rounded-lg bg-slate-700 text-white font-semibold hover:bg-slate-800 shadow-md">Download</button>
+        <button id="resetBtn" class="px-4 py-2 rounded-lg border border-slate-300 font-semibold text-slate-700 bg-white hover:bg-slate-100 shadow-sm">Reset Data</button>
       </div>
     </div>
 
     <div id="content" class="space-y-6"></div>
   </div>
 
-  <script>
-    // If user tries direct access without form → alert + redirect
-    if (!window.VLProgress) {
-      alert("Progress tracking script missing.");
-    } else {
-      VLProgress.initPage();
-      VLProgress.markReportViewed();
+  <div id="reportAlertModal" class="modal" role="alertdialog" aria-modal="true" aria-labelledby="reportAlertTitle" aria-describedby="reportAlertMessage">
+    <div class="modal-box danger" role="document">
+      <h2 id="reportAlertTitle">Alert</h2>
+      <p id="reportAlertMessage"></p>
+      <div class="modal-actions" data-report-alert-actions hidden>
+        <button type="button" class="modal-close-btn" data-report-alert-yes>Yes</button>
+        <button type="button" class="modal-close-btn modal-secondary-btn" data-report-alert-no>No</button>
+      </div>
+      <button type="button" class="modal-close-btn" data-report-alert-close>OK</button>
+    </div>
+  </div>
 
-      if (!VLProgress.hasUser()) {
-        alert("To view the progress report, you must first fill in all your details in the user form.");
-        // redirect top if opened inside iframe
-        const target = "user_input.html?return=progressreport.html";
-        try {
-          if (window.top) window.top.location.href = target;
-          else window.location.href = target;
-        } catch {
-          window.location.href = target;
-        }
+  <script>
+    const reportAlertModal = document.getElementById("reportAlertModal");
+    const reportAlertTitle = document.getElementById("reportAlertTitle");
+    const reportAlertMessage = document.getElementById("reportAlertMessage");
+    const reportAlertClose = reportAlertModal?.querySelector("[data-report-alert-close]");
+    const reportAlertActions = reportAlertModal?.querySelector("[data-report-alert-actions]");
+    const reportAlertYes = reportAlertModal?.querySelector("[data-report-alert-yes]");
+    const reportAlertNo = reportAlertModal?.querySelector("[data-report-alert-no]");
+    let reportAlertOnClose = null;
+    let reportAlertOnYes = null;
+    let reportAlertOnNo = null;
+    let reportAlertMode = "alert";
+
+    function showReportAlert(message, title = "Alert", options = {}) {
+      const opts = typeof options === "function" ? { onClose: options } : (options || {});
+
+      if (!reportAlertModal) {
+        alert(message);
+        if (typeof opts.onClose === "function") opts.onClose();
+        return;
+      }
+      if (reportAlertTitle) reportAlertTitle.textContent = title;
+      if (reportAlertMessage) reportAlertMessage.textContent = message;
+      reportAlertOnClose = typeof opts.onClose === "function" ? opts.onClose : null;
+      reportAlertOnYes = typeof opts.onYes === "function" ? opts.onYes : null;
+      reportAlertOnNo = typeof opts.onNo === "function" ? opts.onNo : null;
+      reportAlertMode = opts.mode === "confirm" ? "confirm" : "alert";
+
+      if (reportAlertActions) reportAlertActions.hidden = reportAlertMode !== "confirm";
+      if (reportAlertClose) reportAlertClose.classList.toggle("hidden", reportAlertMode === "confirm");
+      if (reportAlertMode === "confirm") {
+        setTimeout(() => reportAlertYes?.focus?.(), 0);
       } else {
-        renderReport();
+        setTimeout(() => reportAlertClose?.focus?.(), 0);
+      }
+
+      reportAlertModal.classList.add("show");
+      document.body.classList.add("is-modal-open");
+    }
+
+    function closeReportAlert(action = "close") {
+      if (!reportAlertModal) return;
+      reportAlertModal.classList.remove("show");
+      document.body.classList.remove("is-modal-open");
+      const mode = reportAlertMode;
+      const onClose = reportAlertOnClose;
+      const onYes = reportAlertOnYes;
+      const onNo = reportAlertOnNo;
+      reportAlertOnClose = null;
+      reportAlertOnYes = null;
+      reportAlertOnNo = null;
+      reportAlertMode = "alert";
+
+      if (mode === "confirm") {
+        if (action === "yes" && onYes) onYes();
+        if (action === "no" && onNo) onNo();
+      } else if (onClose) {
+        onClose();
       }
     }
+
+    if (reportAlertClose) {
+      reportAlertClose.addEventListener("click", closeReportAlert);
+    }
+    if (reportAlertYes) {
+      reportAlertYes.addEventListener("click", () => closeReportAlert("yes"));
+    }
+    if (reportAlertNo) {
+      reportAlertNo.addEventListener("click", () => closeReportAlert("no"));
+    }
+
+    reportAlertModal?.addEventListener("click", (event) => {
+      if (event.target === reportAlertModal) closeReportAlert();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && reportAlertModal?.classList.contains("show")) {
+        closeReportAlert();
+      }
+    });
+
+    function redirectToUserInputForm(returnUrl = "aim.html") {
+      const params = new URLSearchParams({ return: returnUrl }).toString();
+      const target = `user_input.html?${params}`;
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.href = target;
+          return;
+        }
+      } catch {
+        // ignore cross-origin errors
+      }
+      window.location.href = target;
+    }
+
+    function navigateToAim() {
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.href = "aim.html";
+          return;
+        }
+      } catch {
+        // ignore errors
+      }
+      window.location.href = "aim.html";
+    }
+
+    // If user tries direct access without form → alert + redirect
+    if (!window.VLProgress) {
+      showReportAlert("Progress tracking script missing.");
+      return;
+    }
+
+    VLProgress.initPage();
+    VLProgress.markReportViewed();
+
+    if (!VLProgress.hasUser()) {
+      showReportAlert(
+        "To view the progress report, you must first fill in all your details in the user form.",
+        "Notice",
+        () => redirectToUserInputForm("progressreport.html")
+      );
+      return;
+    }
+
+    renderReport();
 
     function renderReport() {
       const state = VLProgress.getState();
@@ -70,33 +219,49 @@
       const totalMs = start ? (new Date(end).getTime() - new Date(start).getTime()) : 0;
 
       const baseSections = `
-        <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
-          <h2 class="text-xl font-bold text-slate-900 mb-3">User Details</h2>
-          <div class="grid sm:grid-cols-2 gap-4 text-slate-700">
-            <div><span class="font-semibold">Name:</span> ${escapeHTML(user.name)}</div>
-            <div><span class="font-semibold">Email:</span> ${escapeHTML(user.email)}</div>
-            <div><span class="font-semibold">Designation:</span> ${escapeHTML(user.designation)}</div>
+        <div class="bg-white/90 rounded-2xl shadow border border-slate-200 p-6 backdrop-blur">
+          <div class="flex flex-wrap items-start gap-4 justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900 mb-2">User Details</h2>
+              <div class="grid sm:grid-cols-2 gap-3 text-slate-700">
+                <div><span class="font-semibold">Name:</span> ${escapeHTML(user.name)}</div>
+                <div><span class="font-semibold">Email:</span> ${escapeHTML(user.email)}</div>
+                <div><span class="font-semibold">Designation:</span> ${escapeHTML(user.designation)}</div>
+              </div>
+            </div>
+            <div class="text-sm text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">
+              Saved locally; clears on reset.
+            </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
-          <h2 class="text-xl font-bold text-slate-900 mb-3">Start / End & Duration</h2>
-          <div class="space-y-3 text-slate-700">
-            <div><span class="font-semibold">Session Start:</span> ${startDisplay}</div>
-            <div><span class="font-semibold">Report Viewed (End):</span> ${endDisplay}</div>
-            <div><span class="font-semibold">Total Duration:</span> ${VLProgress.formatMs(totalMs)}</div>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white/90 rounded-2xl shadow border border-slate-200 p-6 backdrop-blur">
+            <h2 class="text-xl font-bold text-slate-900 mb-3">Start / End</h2>
+            <div class="space-y-3 text-slate-700">
+              <div><span class="font-semibold">Session Start:</span> ${startDisplay}</div>
+              <div><span class="font-semibold">Report Viewed:</span> ${endDisplay}</div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-sky-50 via-white to-slate-50 rounded-2xl shadow border border-slate-200 p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-3">Elapsed Time</h2>
+            <p class="text-3xl font-bold text-sky-700">${VLProgress.formatMs(totalMs)}</p>
+            <p class="text-slate-500 text-sm mt-1">Measured from session start to when this report opened.</p>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
-          <h2 class="text-xl font-bold text-slate-900 mb-3">Assessment Scores</h2>
-          <div class="overflow-auto">
+        <div class="bg-white/90 rounded-2xl shadow border border-slate-200 p-6 backdrop-blur">
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <h2 class="text-xl font-bold text-slate-900">Assessment Scores</h2>
+            <span class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700">Auto-saved</span>
+          </div>
+          <div class="overflow-auto rounded-xl border border-slate-100">
             <table class="w-full text-left">
-              <thead>
+              <thead class="bg-slate-50">
                 <tr class="text-slate-600 text-sm">
-                  <th class="py-2 pr-4">Assessment</th>
-                  <th class="py-2 pr-4">Score</th>
-                  <th class="py-2">Last Updated</th>
+                  <th class="py-2 px-3">Assessment</th>
+                  <th class="py-2 px-3">Score</th>
+                  <th class="py-2 px-3">Last Updated</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,11 +424,18 @@
     document.getElementById("printBtn").addEventListener("click", () => window.print());
     document.getElementById("downloadBtn").addEventListener("click", downloadReport);
     document.getElementById("resetBtn").addEventListener("click", () => {
-      if (confirm("Reset all saved user data and timings?")) {
-        VLProgress.resetAll();
-        alert("Reset done. Redirecting to User Input form.");
-        window.location.href = "user_input.html?return=aim.html";
-      }
+      showReportAlert(
+        "Reset all saved user data, assessments, and timings?",
+        "Confirm Reset",
+        {
+          mode: "confirm",
+          onYes: () => {
+            VLProgress.resetAll();
+            showReportAlert("Reset done. Redirecting to Aim page.", "Reset Complete", { onClose: navigateToAim });
+          },
+          onNo: () => {}
+        }
+      );
     });
 
     function downloadReport() {
@@ -277,9 +449,23 @@
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } catch (err) {
         console.error("Download failed", err);
-        alert("Unable to download the report. Please use the Print button or save the page manually.");
+        showReportAlert(
+          "Unable to download the report. Please use the Print button or save the page manually.",
+          "Download Failed"
+        );
       }
     }
   </script>
+  <script>
+    (function initHeaderNav() {
+      const toggle = document.getElementById("mobile-menu-toggle");
+      const nav = document.querySelector(".top-nav");
+      if (!toggle || !nav) return;
+      toggle.addEventListener("click", () => {
+        nav.classList.toggle("hidden");
+      });
+    })();
+  </script>
+  <script src="./user_input_modal.js"></script>
 </body>
 </html>
