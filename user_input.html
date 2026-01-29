@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Input Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50">
+  <!-- Load tracker -->
+  <script src="./progress_tracker.js"></script>
+
+  <div class="max-w-2xl mx-auto px-4 py-10">
+    <div class="bg-white rounded-2xl shadow border border-slate-200 p-6">
+      <h1 class="text-2xl font-bold text-slate-900">User Input Form</h1>
+      <form id="userForm" class="mt-6 space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700">Name</label>
+          <input id="name" type="text" required
+                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700">Email</label>
+          <input id="email" type="email" required
+                 placeholder="yourname@university.edu"
+                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500"/>
+          <p id="emailErr" class="text-sm text-red-600 mt-1 hidden"></p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700">Designation</label>
+          <select id="designation" required
+                  class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500">
+            <option value="">Select</option>
+            <option value="Student">Student</option>
+            <option value="Faculty">Faculty</option>
+            <option value="Working Professional">Working Professional</option>
+            <option value="PhD Scholar">PhD Scholar</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button type="submit"
+                  class="rounded-lg bg-sky-600 text-white px-5 py-2 font-semibold hover:bg-sky-700">
+            Submit
+          </button>
+          <button type="button" id="backBtn"
+                  class="rounded-lg border border-slate-300 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-100">
+            Back
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Track this page
+    if (window.VLProgress) VLProgress.initPage();
+
+    // ✅ EDIT THIS LIST for your allowed domains
+    const ALLOWED_DOMAINS = [
+      "university.edu",
+      "iitr.ac.in",
+      "gmail.com",              // ✅ allow Gmail
+    
+    ];
+
+    function getReturnURL() {
+      const params = new URLSearchParams(window.location.search);
+      const ret = (params.get("return") || "aim.html").trim();
+      // simple sanitize: allow only local .html
+      if (!/^[a-z0-9_\-\/]+\.html$/i.test(ret)) return "aim.html";
+      return ret;
+    }
+
+    function emailAllowed(email) {
+      const at = email.lastIndexOf("@");
+      if (at === -1) return false;
+      const domain = email.slice(at + 1).toLowerCase();
+      return ALLOWED_DOMAINS.some(d => d.toLowerCase() === domain);
+    }
+
+    const form = document.getElementById("userForm");
+    const emailErr = document.getElementById("emailErr");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const designation = document.getElementById("designation").value.trim();
+
+      emailErr.classList.add("hidden");
+      emailErr.textContent = "";
+
+      if (!emailAllowed(email)) {
+        emailErr.textContent = "Email must be from allowed domains only: " + ALLOWED_DOMAINS.map(d => "@" + d).join(", ");
+        emailErr.classList.remove("hidden");
+        return;
+      }
+
+      // Save user + allow report
+      VLProgress.setUser({ name, email, designation });
+      VLProgress.logStep("User Form Submitted", { emailDomain: email.split("@").pop() });
+
+      alert("Submitted! Now you can generate your progress report.");
+
+      const returnUrl = getReturnURL();
+      if (window.top !== window.self) {
+        window.top.postMessage(
+          { type: "vlab:user_input_submitted", returnUrl },
+          window.location.origin
+        );
+        return;
+      }
+
+      window.location.href = returnUrl;
+    });
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+      window.location.href = getReturnURL();
+    });
+  </script>
+</body>
+</html>
