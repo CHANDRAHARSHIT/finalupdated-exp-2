@@ -1162,17 +1162,24 @@ h3 {
 }
 
 .graph-actions {
+  position: relative;
+  top: 420px;
+  left: 1035px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
+
+  transform: scale(0.52);
+  transform-origin: top left;
+  width: max-content;
 }
 
 .graph-header h3 {
   font-size: clamp(1rem, 1.8vw, 1.3rem);
   color: #222;
 }
+ 
 
 .graph-caption {
   font-size: clamp(0.85rem, 1.4vw, 1rem);
@@ -2221,7 +2228,7 @@ body.is-modal-open {
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0 20px;
   border-radius: 50px;
-  font-size: 15px;
+  font-size: 25px;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -2235,8 +2242,8 @@ body.is-modal-open {
   flex-shrink: 0;
   background-image: linear-gradient(135deg, #1f242b 0%, #151a20 45%, #0c1015 100%);
   background-size: 200% 200%;
-  width: 150px;
-  height: 48px;
+  width: 223px;
+  height: 80px;
   text-align: center;
   white-space: nowrap;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);

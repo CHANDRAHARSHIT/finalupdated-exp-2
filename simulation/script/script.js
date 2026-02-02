@@ -9,6 +9,12 @@ const WIRE_CURVINESS = 50;
 
 const generatorRotor = document.querySelector(".generator-rotor");
 
+// const hasActiveProfile = Boolean(window.labTracking?.getFormProfile?.());
+// if (!hasActiveProfile) {
+//   window.alert("To perform the experiment, please fill the user input form first.");
+//   window.location.href = "../../progressreport.html";
+// }
+
 let suppressAllAutoVoices = true;
 let suppressGuideDuringAutoConnect = false;
 let isAutoConnecting = false;
@@ -1623,7 +1629,17 @@ function voltageToAngle(voltageValue) {
   const resetBtn = findButtonByLabel("Reset");
   const printBtn = findButtonByLabel("Print");
   const reportBtn = findButtonByLabel("Report");
+[addTableBtn, graphBtn, resetBtn, printBtn, reportBtn].forEach((btn) => {
+  if (btn) btn.setAttribute("type", "button");
+});
 
+// Stop Enter key from submitting while editing the observation table
+document.addEventListener("keydown", (e) => {
+  const inObservationTable = e.target && e.target.closest && e.target.closest("#observationTable");
+  if (inObservationTable && e.key === "Enter") {
+    e.preventDefault();
+  }
+});
   const needle1 = document.querySelector(".meter-needle1"); // Ammeter-1 (motor current)
   const needle2 = document.querySelector(".meter-needle2"); // Ammeter-2 (load current)
   const needle3 = document.querySelector(".meter-needle3"); // Voltmeter-1 (supply voltage)
@@ -1959,6 +1975,11 @@ tr:nth-child(even) { background-color: #f8fbff; }
   font-weight: 600;
   font-size: 13px;
 }
+  .vl-logo{
+  height: 48px;
+  max-width: 180px;
+  object-fit: contain;
+}
 .print-btn {
   margin-top: 28px;
   padding: 12px 28px;
@@ -1996,13 +2017,14 @@ tr:nth-child(even) { background-color: #f8fbff; }
   <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
 </head>
 <body>
-  <div class="header-row">
-    <h1>Virtual Lab Simulation Report</h1>
-  </div>
+<div class="header-row">
+  <img src="../images/image.png" class="vl-logo" />
+  <h1>To study the Load Characteristics of DC shunt generator Simulation Report</h1>
+</div>
 
   <div class="section">
     <p class="badge">DC Machines Lab</p>
-    <p><span class="label">Experiment Title:</span> Load Test on DC Shunt Generator</p>
+    <p><span class="label">Experiment Title:</span>To study the Load Characteristics of DC shunt generator Simulation Report</p>
     <p><span class="label">Date:</span> ${now.toLocaleDateString()}</p>
     <div class="info-grid">
       <div class="info-card"><span class="label">Start Time:</span><br>${startTimeText}</div>
