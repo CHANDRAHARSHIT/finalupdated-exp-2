@@ -107,6 +107,14 @@
     return lastSegment || 'index.html';
   }
 
+  function hasEmbeddedProgressSection() {
+    return !!document.getElementById('progressreport');
+  }
+
+  function shouldEmbedProgress(isAimPage) {
+    return isAimPage || hasEmbeddedProgressSection();
+  }
+
   function ensureProgressSection(main) {
     if (!main) return;
     if (document.getElementById('progressreport')) return;
@@ -129,15 +137,21 @@
 
     if (anchor) {
       if (!anchor.id) anchor.id = 'progressReportNav';
-      anchor.href = isAimPage ? '#progressreport' : 'progressreport.html';
+      const targetHref = shouldEmbedProgress(isAimPage) ? '#progressreport' : 'progressreport.html';
+      anchor.href = targetHref;
       anchor.setAttribute('data-progress-report-link', '');
+      anchor.removeAttribute('target');
+      anchor.setAttribute('target', '_self');
+      anchor.setAttribute('rel', 'noopener');
       anchor.innerHTML = getProgressNavTemplate(label);
       return anchor;
     }
 
     anchor = document.createElement('a');
     anchor.id = 'progressReportNav';
-    anchor.href = isAimPage ? '#progressreport' : 'progressreport.html';
+    anchor.href = shouldEmbedProgress(isAimPage) ? '#progressreport' : 'progressreport.html';
+    anchor.setAttribute('target', '_self');
+    anchor.setAttribute('rel', 'noopener');
     anchor.className = 'menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group';
     anchor.setAttribute('data-progress-report-link', '');
     anchor.innerHTML = getProgressNavTemplate(label);
@@ -161,11 +175,12 @@
 
   function markHeaderProgressLinks(isAimPage) {
     const headerLinks = Array.from(document.querySelectorAll('.top-nav .nav-link'));
+    const shouldEmbed = shouldEmbedProgress(isAimPage);
     headerLinks.forEach((link) => {
       const href = link.getAttribute('href') || '';
       if (href.includes('progressreport')) {
         link.setAttribute('data-progress-report-link', '');
-        if (isAimPage) {
+        if (shouldEmbed) {
           link.href = '#progressreport';
         }
         // Always stay in the same tab/window for the progress report
@@ -236,7 +251,18 @@
     forceSameTabProgressLinks();
 
     const pageName = getPageName();
-    const isAimPage = pageName === 'aim.html';
+    const EMBED_PAGES = [
+  'aim.html',
+  'theory.html',
+  'pretest.html',
+  'procedure.html',
+  'simulation.html',
+  'posttest.html',
+  'references.html',
+  'contributors.html'
+];
+
+const isAimPage = EMBED_PAGES.includes(pageName);
     const main = document.querySelector('main');
     ensureModals();
     if (isAimPage && main) ensureProgressSection(main);
@@ -246,7 +272,7 @@
 
     VP().initPage();
 
-    const progressReturnUrl = isAimPage ? `${pageName}#progressreport` : 'progressreport.html';
+    const progressReturnUrl = shouldEmbedProgress(isAimPage) ? `${pageName}#progressreport` : 'progressreport.html';
 
     const userFormPrompt = document.getElementById('userFormPrompt');
     const promptYes = document.getElementById('promptYes');
@@ -458,15 +484,30 @@
     document.addEventListener('click', (event) => {
       const target = event.target.closest('a');
       if (!target) return;
-      const href = target.getAttribute('href') || '';
-      if (!href.toLowerCase().includes('progressreport')) return;
-      if (VP().hasUser()) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      showAimAlert(
-        'You have to first fill the user details then you can generate the report.',
-        'Notice'
-      );
+      const rawHref = target.getAttribute('href') || '';
+      const href = rawHref.toLowerCase();
+      const isProgressLink =
+        target.hasAttribute('data-progress-report-link') ||
+        href.includes('progressreport') ||
+        href === '#progressreport' ||
+        href.endsWith('#progressreport');
+      if (!isProgressLink) return;
+
+      if (!VP().hasUser()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        showAimAlert(
+          'You have to first fill the user details then you can generate the report.',
+          'Notice'
+        );
+        return;
+      }
+
+      const isExternalProgressPage = !href.startsWith('#') || href.includes('.html');
+      if (isExternalProgressPage) {
+        event.preventDefault();
+        window.location.href = target.href;
+      }
     }, true);
 
     if (isAimPage) {
