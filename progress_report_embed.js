@@ -25,7 +25,7 @@
   }
   function getReportLabel() {
     const page = getPageName();
-    return page === "simulation.html" ? "Simulation Report" : "Progress Report";
+    return page === "simulation.html" ? "Progress Report" : "Progress Report";
   }
 
   function getProgressSectionTemplate(label) {
@@ -251,18 +251,7 @@
     forceSameTabProgressLinks();
 
     const pageName = getPageName();
-    const EMBED_PAGES = [
-  'aim.html',
-  'theory.html',
-  'pretest.html',
-  'procedure.html',
-  'simulation.html',
-  'posttest.html',
-  'references.html',
-  'contributors.html'
-];
-
-const isAimPage = EMBED_PAGES.includes(pageName);
+    const isAimPage = pageName === 'aim.html';
     const main = document.querySelector('main');
     ensureModals();
     if (isAimPage && main) ensureProgressSection(main);

@@ -84,6 +84,40 @@
     const nameAvatar = document.getElementById("nameAvatar");
     const namePreview = document.getElementById("namePreview");
     const designationChip = document.getElementById("designationChip");
+    const DRAFT_KEY = "vlab_exp2_user_input_draft";
+
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveDraft(value) {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
+      } catch {}
+    }
+
+    function clearDraft() {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {}
+    }
+
+    function persistDraft() {
+      if (!nameInput && !emailInput && !designationInput) return;
+      const payload = {
+        name: (nameInput?.value || "").trim(),
+        email: (emailInput?.value || "").trim(),
+        designation: (designationInput?.value || "").trim(),
+        modifiedAt: Date.now()
+      };
+      saveDraft(payload);
+    }
 
     function getReturnUrl() {
       const u = new URL(window.location.href);
@@ -161,24 +195,32 @@
     }
 
     function hydrateFromStoredUser() {
-      if (!window.VLProgress || typeof VLProgress.getState !== "function") {
-        updateProfilePreview(nameInput?.value || "", designationInput?.value || "");
-        return;
-      }
-
-      const state = VLProgress.getState();
+      const draft = loadDraft();
+      const state = (window.VLProgress && typeof VLProgress.getState === "function") ? VLProgress.getState() : null;
       const user = state?.user || {};
 
-      if (nameInput && !nameInput.value && user.name) nameInput.value = user.name;
-      if (emailInput && !emailInput.value && user.email) emailInput.value = user.email;
-      if (designationInput && !designationInput.value && user.designation) {
-        designationInput.value = user.designation;
-      }
+      const submittedAt = user.submittedAt ? Date.parse(user.submittedAt) : 0;
+      const draftAt = draft?.modifiedAt ? Number(draft.modifiedAt) : 0;
+      const preferDraft = draft && draftAt > submittedAt;
 
-      updateProfilePreview(
-        nameInput?.value || user.name || "",
-        designationInput?.value || user.designation || ""
-      );
+      const resolveValue = (field) => {
+        const saved = (user[field] || "").trim();
+        const drafted = (draft?.[field] || "").trim();
+        if (preferDraft && drafted) return drafted;
+        return saved || drafted || "";
+      };
+
+      const initial = {
+        name: resolveValue("name"),
+        email: resolveValue("email"),
+        designation: resolveValue("designation")
+      };
+
+      if (nameInput) nameInput.value = initial.name;
+      if (emailInput) emailInput.value = initial.email;
+      if (designationInput) designationInput.value = initial.designation;
+
+      updateProfilePreview(initial.name, initial.designation);
     }
 
     hydrateFromStoredUser();
@@ -186,13 +228,21 @@
     if (nameInput) {
       nameInput.addEventListener("input", () => {
         updateProfilePreview(nameInput.value, designationInput?.value || "");
+        persistDraft();
       });
     }
 
+    if (emailInput) {
+      emailInput.addEventListener("input", persistDraft);
+    }
+
     if (designationInput) {
-      designationInput.addEventListener("input", () => {
+      const handleDesignationInput = () => {
         updateProfilePreview(nameInput?.value || "", designationInput.value);
-      });
+        persistDraft();
+      };
+      designationInput.addEventListener("input", handleDesignationInput);
+      designationInput.addEventListener("change", handleDesignationInput);
     }
 
     const inIframe = (() => {
@@ -240,6 +290,7 @@
       }
 
       VLProgress.setUser({ name, email, designation });
+      clearDraft();
       updateProfilePreview(name, designation);
 
       const returnUrl = getReturnUrl();

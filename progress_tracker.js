@@ -20,6 +20,7 @@
     "vlab_exp2_simulation_report_html",
     "vlab_exp2_simulation_report_updated_at"
   ];
+  const USER_PROGRESS_SUFFIXES = GENERAL_PROGRESS_KEYS.map((key) => key.replace(/^vlab_exp2_/, ""));
 
   const WINDOW_NAME_PREFIX = "VLAB_EXP2::";
 
@@ -229,17 +230,29 @@
     } catch {}
   }
 
+  function removeUserScopedProgress(userHash) {
+    if (!userHash) return;
+    const prefix = `vlab_exp2_user_${userHash}_`;
+    try {
+      for (const suffix of USER_PROGRESS_SUFFIXES) {
+        localStorage.removeItem(prefix + suffix);
+      }
+    } catch {}
+  }
+
   function migrateGeneralProgressKeysToUser(userHash) {
     if (!userHash) return;
     try {
       let movedAny = false;
       const prefix = `vlab_exp2_user_${userHash}_`;
 
-      for (const key of GENERAL_PROGRESS_KEYS) {
+      for (let i = 0; i < GENERAL_PROGRESS_KEYS.length; i++) {
+        const key = GENERAL_PROGRESS_KEYS[i];
+        const suffix = USER_PROGRESS_SUFFIXES[i];
+
         const value = localStorage.getItem(key);
         if (!value || !String(value).trim()) continue;
 
-        const suffix = key.replace(/^vlab_exp2_/, "");
         const destKey = prefix + suffix;
 
         const existing = localStorage.getItem(destKey);
@@ -277,8 +290,14 @@
     } catch {}
 
     if (newHash) {
-      if (isNewUserByEmail && prevHash && prevHash !== newHash) clearGeneralProgressKeys();
-      migrateGeneralProgressKeysToUser(newHash);
+      const isSameEmail = prevHash && prevHash === newHash;
+      if (isSameEmail) {
+        clearGeneralProgressKeys();
+        removeUserScopedProgress(newHash);
+      } else {
+        if (isNewUserByEmail && prevHash && prevHash !== newHash) clearGeneralProgressKeys();
+        migrateGeneralProgressKeysToUser(newHash);
+      }
     }
 
     setWindowNameValues({
@@ -335,13 +354,7 @@
     clearGeneralProgressKeys();
 
     // remove current user-scoped keys for assessments + simulation report
-    if (activeHash) {
-      try {
-        const prefix = `vlab_exp2_user_${activeHash}_`;
-        const suffixes = GENERAL_PROGRESS_KEYS.map(k => k.replace(/^vlab_exp2_/, ""));
-        for (const suf of suffixes) localStorage.removeItem(prefix + suf);
-      } catch {}
-    }
+    removeUserScopedProgress(activeHash);
 
     // session keys
     try {
