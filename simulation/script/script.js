@@ -2028,8 +2028,8 @@ tr:nth-child(even) { background-color: #f8fbff; }
 </div>
 
   <div class="section">
-    <p class="badge">DC Machines Lab</p>
-    <p><span class="label">Experiment Title:</span>To study the Load Characteristics of DC shunt generator Simulation Report</p>
+    <p class="badge">Electrical Machines Lab</p>
+    <p><span class="label">Experiment Title:</span>To study the Load Characteristics of DC shunt generator</p>
     <p><span class="label">Date:</span> ${now.toLocaleDateString()}</p>
     <div class="info-grid">
       <div class="info-card"><span class="label">Start Time:</span><br>${startTimeText}</div>
@@ -2041,29 +2041,24 @@ tr:nth-child(even) { background-color: #f8fbff; }
   <div class="section">
     <h2>Summary</h2>
     <h3>Aim</h3>
-    <p style="text-align:justify;">Study the DC shunt generator characteristics by varying lamp load, recording terminal voltage and current, and plotting the V-I relationship.</p>
+    <p style="text-align:justify;">To study the external characteristic of a DC shunt generator by varying the lamp load, measuring the terminal voltage and load current, and plotting the terminal voltage versus load current (V–I) curve.</p>
 
-    <h3>Procedure Summary</h3>
-    <p style="text-align:justify;">Connections were completed as instructed, supply was enabled, lamp load was varied, readings of load current and terminal voltage were taken for multiple steps, and a graph was generated to observe the voltage regulation.</p>
+    <h3>Simulation Summary</h3>
+    <p style="text-align:justify;">Connections were completed as instructed, supply was switched on, lamp load was varied, and the corresponding load current and terminal voltage readings were recorded, and a graph was generated between terminal voltage and load current.</p>
 
-    <h3>Components</h3>
+    <h3>Components and key Parameters</h3>
     <ul class="two-column-list">
-      <li>DC Shunt Generator</li>
-      <li>DC Motor (prime mover)</li>
-      <li>MCB / Supply</li>
-      <li>Lamp Load Bank</li>
-      <li>Voltmeter (0-240 V)</li>
-      <li>Ammeter (0-20 A)</li>
+      <li>MCB</li>
+      <li>3-Point Starter: 220V DC, 7.5 HP</li>
+      <li>DC Shunt Motor: 5 HP, 220 V DC, 19 A (max), 1500 RPM</li>
+      <li>DC Shunt Generator: 3 kW, 220 V DC, 1500 RPM</li>
+      <li>Load Type: Resistive Lamp Load</li>
+      <li>Bulbs: 10 × 200 W each</li>
+      <li>DC Voltmeter: 0-240 V</li>
+      <li>DC Ammeter:0-20 A</li>
       <li>Connecting Leads</li>
     </ul>
-
-    <h3>Key Parameters</h3>
-    <ul class="two-column-list">
-      <li>Rated Voltage: 220-240 V DC</li>
-      <li>Load Type: Resistive Lamp Bank</li>
-      <li>Voltmeter Range: 0-240 V</li>
-      <li>Ammeter Range: 0-20 A</li>
-    </ul>
+ 
   </div>
 
   <div class="section">
