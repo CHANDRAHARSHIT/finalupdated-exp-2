@@ -867,9 +867,7 @@ function setupJsPlumb() {
   sharedControls.setMcbState = setMcbState;
   sharedControls.starterHandle = starterHandle;
 
-  const mcbLabel = document.querySelector(".mcb-label");
-  const mcbTargets = [mcbImg, mcbLabel].filter(Boolean);
-  if (mcbTargets.length) {
+  if (mcbImg) {
     const handleMcbClick = function () {
       if (!connectionsVerified) {
         showPopup("Make and check the connections before turning on the MCB.");
@@ -882,10 +880,8 @@ function setupJsPlumb() {
       }
     };
 
-    mcbTargets.forEach((el) => {
-      el.style.cursor = "pointer";
-      el.addEventListener("click", handleMcbClick);
-    });
+    mcbImg.style.cursor = "pointer";
+    mcbImg.addEventListener("click", handleMcbClick);
   }
 
   // Click on label buttons (e.g., .point-R) to remove connections from corresponding point
@@ -1018,14 +1014,15 @@ function setupJsPlumb() {
           })
           .filter(Boolean)
           .join(", ");
-      let message = "Connection not correct";
+      let message = "Please make the connections first";
+    
       let speechMessage = "Connection not correct.";
       if (illegal.length) {
-        message += `\nWrong/extra connections detected${illegal.length > 5 ? " (showing first few)" : ""}: ${formatList(illegal, { labelWrongExtras: true })}`;
+        // message += `\nWrong/extra connections detected${illegal.length > 5 ? " (showing first few)" : ""}: ${formatList(illegal, { labelWrongExtras: true })}`;
         speechMessage += ` Wrong connections: ${formatSpeechList(illegal, { labelWrongExtras: true })}.`;
       }
       if (missing.length) {
-        message += `\nMissing ${missing.length} required connection(s)${missing.length > 5 ? " (showing first few)" : ""}: ${formatList(missing)}`;
+        // message += `\nMissing ${missing.length} required connection(s)${missing.length > 5 ? " (showing first few)" : ""}: ${formatList(missing)}`;
         speechMessage += ` Missing connections: ${formatSpeechList(missing)}.`;
       }
       if (guideSpeechActive()) {
@@ -1054,6 +1051,7 @@ function setupJsPlumb() {
   const autoConnectBtn = findButtonByLabel("Auto Connect");
   if (autoConnectBtn) {
     autoConnectBtn.addEventListener("click", function () {
+      autoConnectBtn.disabled = true;
       isAutoConnecting = true;
       suppressAllAutoVoices = true;
       suppressGuideDuringAutoConnect = true;
@@ -1551,7 +1549,13 @@ function setupJsPlumb() {
   );
 })();
 
- 
+
+// Disable the Check button once the MCB is turned on
+window.addEventListener(MCB_TURNED_ON_EVENT, () => {
+  const btn = findButtonByLabel("Check") || findButtonByLabel("Check Connections");
+  if (btn) btn.disabled = true;
+});
+
 const NEEDLE_TRANSFORM_TRANSLATE = "translate(-50%, -82.5%)";
 
 // Calibrated for the 0-30 A ammeters and 0-410 V voltmeters used in this lab.
@@ -1722,6 +1726,18 @@ document.addEventListener("keydown", (e) => {
     if (!el) return;
     el.style.transform = `${NEEDLE_TRANSFORM_TRANSLATE} rotate(${angleDeg}deg)`;
   }
+
+  // Show supply voltage as soon as the starter handle is moved to ON.
+  window.addEventListener(STARTER_MOVED_EVENT, () => {
+    if (!needle3) return;
+    setNeedleRotation(needle3, voltageToAngle(225));
+  });
+
+  // Park voltmeter-1 when the MCB is turned off.
+  window.addEventListener(MCB_TURNED_OFF_EVENT, () => {
+    if (!needle3) return;
+    setNeedleRotation(needle3, voltageToAngle(0));
+  });
 
   function resolveAngle(manualAngles, idx, fallbackAngle) {
     const manual = manualAngles && Number.isFinite(manualAngles[idx]) ? manualAngles[idx] : null;
@@ -2366,6 +2382,12 @@ tr:nth-child(even) { background-color: #f8fbff; }
     graphPlotAlertShown = false;
     graphPlotted = false;
 
+    // Re-enable primary controls after reset
+    const resetCheckBtn = findButtonByLabel("Check") || findButtonByLabel("Check Connections");
+    if (resetCheckBtn) resetCheckBtn.disabled = false;
+    const resetAutoBtn = findButtonByLabel("Auto Connect");
+    if (resetAutoBtn) resetAutoBtn.disabled = false;
+
     if (observationBody) {
       observationBody.innerHTML = "";
     }
@@ -2475,64 +2497,59 @@ tr:nth-child(even) { background-color: #f8fbff; }
     tooltipLayer.className = "hover-tooltip";
     tooltipLayer.innerHTML =
       '<div class="hover-tooltip__body"><div class="hover-tooltip__accent"></div><div class="hover-tooltip__text"></div></div>';
-    const tooltipText = tooltipLayer.querySelector(".hover-tooltip__text");
-    document.body.appendChild(tooltipLayer);
+      const tooltipText = tooltipLayer.querySelector(".hover-tooltip__text");
+      document.body.appendChild(tooltipLayer);
 
-    const tooltips = [
-      {
-        id: "mcb",
-        selector: ".mcb-toggle, .mcb-label, .mcb-block",
-        text: "MCB: Main supply breaker for the setup; trips on overload/short-circuit to protect the circuit and users."
-      },
-      {
-        id: "starter",
-        selector: ".starter-block, .starter-body, .starter-handle, .starter-label",
+      const tooltips = [
+        {
+          id: "mcb",
+          selector: ".mcb-toggle, .mcb-block img",
+          text: "MCB: Main supply breaker for the setup; trips on overload/short-circuit to protect the circuit and users."
+        },
+        {
+          id: "starter",
+          selector: ".starter-body, .starter-handle",
         text: "3-Point Starter: Limits the DC motor starting current and provides no-volt/overload protection; drag the handle after turning ON the MCB."
       },
       {
         id: "lamp-load",
-        selector: ".lampboard-dropdown, #number, .lamp-board, .lamp-grid, .lamp-bulb, .lamp-load-label",
+        selector: ".lamp-bulb",
         text: "Lamp Load: Variable resistive bulb bank used to change load; select the number of bulbs to vary current and observe voltage regulation."
       },
       {
         id: "ammeter-1",
-        selector: ".meters > .meter-card:nth-of-type(1), #ammter1-label",
+        selector: ".meter-card:nth-of-type(1) > img",
         text: "Ammeter-1: Measures the motor/supply current (connected in series)."
       },
       {
         id: "voltmeter-1",
-        selector: ".meters > .meter-card:nth-of-type(2), #voltmeter1-label",
+        selector: ".meter-card:nth-of-type(2) > img",
         text: "Voltmeter-1: Measures the supply/line voltage (connected across the source)."
       },
       {
         id: "ammeter-2",
-        selector: ".meters > .meter-card:nth-of-type(3), #ammter2-label",
+        selector: ".meter-card:nth-of-type(3) > img",
         text: "Ammeter-2: Measures the load current through the lamp load (connected in series with the load)."
       },
       {
         id: "voltmeter-2",
-        selector: ".meters > .meter-card:nth-of-type(4), #voltmeter2-label",
+        selector: ".meter-card:nth-of-type(4) > img",
         text: "Voltmeter-2: Measures the generator terminal voltage (connected across generator terminals)."
       },
       {
         id: "dc-motor",
-        selector: ".motor-box, .motor-box img, .dc-motor-label",
+        selector: ".motor-box > img",
         text: "DC Shunt Motor: Prime mover converting electrical power to mechanical power to drive the generator."
       },
       {
         id: "coupler",
-        selector: ".coupler, .coupler img",
+        selector: ".coupler > img",
         text: "Coupling/Shaft: Mechanical link that transfers torque from the motor to the generator."
       },
       {
         id: "dc-generator",
-        selector: ".generator-box, .generator-body, .generator-rotor, .dc-generator-label",
+        selector: ".generator-body, .generator-rotor",
         text: "DC Shunt Generator: Converts mechanical power from the motor into DC output for the load; terminal voltage is measured on Voltmeter-2."
-      },
-      {
-        id: "observation-table",
-        selector: ".observation-section, #observationTable, #observationBody",
-        text: "Observation Table: Stores recorded readings of load current and terminal voltage for plotting and the report."
       },
       // {
       //   id: "output-graph",
@@ -2605,9 +2622,39 @@ tr:nth-child(even) { background-color: #f8fbff; }
         );
       }
 
+      // Ensure MCB definition shows when its image is clicked.
+      const mcbImage = document.querySelector(".mcb-toggle");
+      if (mcbImage) {
+        mcbImage.addEventListener("click", function (event) {
+          const entry = tooltips.find(t => t.id === "mcb");
+          if (!entry) return;
+          if (activeTarget === mcbImage) {
+            activeTarget = null;
+            hideTip();
+            return;
+          }
+          activeTarget = mcbImage;
+          showTip(entry.text, event);
+          attachLeaveHandler(mcbImage);
+        });
+      }
+
       document.addEventListener("click", function (event) {
-        const found = findEntry(event.target);
-        if (!found) {
+        const searchTarget = event.target.closest("img") || event.target;
+        const found = findEntry(searchTarget);
+        if (!found || !found.match) {
+          if (activeTarget) {
+            activeTarget = null;
+            hideTip();
+          }
+          return;
+        }
+        // Ensure we attach to the actual image element for leave handling.
+        if (found.id === "mcb" && found.match.tagName !== "IMG") {
+          const mcbImgEl = document.querySelector(".mcb-toggle");
+          if (mcbImgEl) found.match = mcbImgEl;
+        }
+        if (found.match.tagName !== "IMG") {
           if (activeTarget) {
             activeTarget = null;
             hideTip();

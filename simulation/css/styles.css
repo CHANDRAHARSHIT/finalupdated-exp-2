@@ -812,7 +812,7 @@ h3 {
 ========================= */
 .workspace {
   position: absolute;
-  top: 326px;
+  top: 380px;
   left: 206px;
   height: 295px;
   display: flex;
@@ -1480,7 +1480,7 @@ h3 {
   align-items: center;
   gap: 8px;
 }
-
+ 
 .components-skip-btn {
   padding: 8px 12px;
   border-radius: 999px;
@@ -1630,7 +1630,7 @@ body.is-modal-open {
 #modalMessage {
   color: #3b2f24;
   white-space: pre-line;
-  text-align: justify;
+  text-align: center;
   line-height: 1.55;
   margin: 0;
 }

@@ -221,7 +221,7 @@
     const pill = document.createElement("span");
     pill.className = "nav-user-pill";
     pill.innerHTML = `
-      <span class="nav-user-avatar" aria-hidden="true" data-user-avatar>UI</span>
+       
       <span class="nav-user-text" data-user-text>${label}</span>
     `;
     a.setAttribute("aria-label", label);

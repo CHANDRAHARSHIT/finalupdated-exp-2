@@ -249,6 +249,26 @@
       border-color: #0b60a8;
     }
 
+    /* Check button disabled state */
+    #check-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: linear-gradient(120deg, #cbd5e1, #e2e8f0);
+      color: #475569;
+      border-color: #cbd5e1;
+      box-shadow: none;
+    }
+
+    /* Refresh button disabled state */
+    #refresh-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: linear-gradient(120deg, #e2e8f0, #f8fafc);
+      color: #475569;
+      border-color: #e2e8f0;
+      box-shadow: none;
+    }
+
     /* MCQ styling */
     .mcq {
       border: 1px solid #e2e8f0;
@@ -805,7 +825,6 @@ const checkBtn = document.getElementById("check-btn");
 
 let currentSetIndices = []; // indices into `questions` array for the current shown set
 let setLocked = false;
-let autoRefreshTimer = null;
 let totalCorrect = readStoredNumber("vlab_exp2_posttest_score");
 let totalAttempted = readStoredNumber("vlab_exp2_posttest_total");
 let hasRenderedSet = false;
@@ -859,10 +878,6 @@ function pickRandomSet() {
   // reset selections for the newly chosen questions
   currentSetIndices.forEach(idx => questions[idx].selected = null);
   setLocked = false;
-  if (autoRefreshTimer) {
-    clearTimeout(autoRefreshTimer);
-    autoRefreshTimer = null;
-  }
   showPage();
 
   if (hasRenderedSet) {
@@ -902,11 +917,12 @@ function showPage() {
       inp.addEventListener("change", () => {
         if (setLocked) return;
         q.selected = inp.value;
-        lockQuestionInputs(div);
+        updateCheckButtonState();
       });
     });
   });
   result.innerHTML = "";
+  updateCheckButtonState();
 }
 
 function lockQuestionInputs(div) {
@@ -918,6 +934,19 @@ function lockQuestionInputs(div) {
     if (input.checked) input.parentElement.classList.add("selected-option");
     else input.parentElement.classList.add("disabled-option");
   });
+}
+
+function updateCheckButtonState() {
+  if (!checkBtn) return;
+  if (setLocked) {
+    checkBtn.disabled = true;
+    return;
+  }
+  const allAnswered = currentSetIndices.every((qIndex) => {
+    const q = questions[qIndex];
+    return !!container.querySelector(`input[name="q${q.id}"]:checked`);
+  });
+  checkBtn.disabled = !allAnswered;
 }
 
 let popupOnClose = null;
@@ -1014,19 +1043,15 @@ function isPopupOpen() {
 
 /* ------------------ ATTEMPT GUARD ------------------ */
 function attemptAlreadyUsedAlert() {
-  showPopup("This set is already checked. A new set will load automatically.", "Notice");
+  showPopup("This set is already checked. Use Refresh Questions to load a new set.", "Notice");
 }
 
 function finalizeAttempt() {
   setLocked = true;
-  refreshBtn.disabled = true;
   checkBtn.disabled = true;
-  if (autoRefreshTimer) clearTimeout(autoRefreshTimer);
-  autoRefreshTimer = setTimeout(() => {
-    refreshBtn.disabled = false;
-    checkBtn.disabled = false;
-    pickRandomSet();
-  }, 1600);
+  container.querySelectorAll("input[type='radio']").forEach(input => {
+    input.disabled = true;
+  });
 }
 
 /* ------------------ CHECK ANSWERS for CURRENT SET ------------------ */
@@ -1091,6 +1116,7 @@ function checkAnswers() {
   result.classList.add(score === setTotal ? "text-green-600" : "text-red-600");
 
   finalizeAttempt();
+  updateCheckButtonState();
 }
 
 /* ------------------ BUTTON BINDINGS ------------------ */

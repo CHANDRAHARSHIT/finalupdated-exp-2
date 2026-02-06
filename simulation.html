@@ -206,7 +206,7 @@
     left: 0;
     right: 0;
   }
-
+ 
   .footer-inner {
     max-width: 1200px;
     margin: 0 auto;
@@ -1029,7 +1029,10 @@
       const noBtn = modal.querySelector('[data-modal-no]');
 
       if (ttl) ttl.textContent = String(title || 'Alert');
-      if (msg) msg.textContent = String(message);
+      if (msg) {
+  msg.textContent = String(message);
+  msg.style.textAlign = opts.center ? 'center' : '';
+}
 
       if (actions) {
         const shouldShowActions = popupMode === 'confirm';
@@ -1174,6 +1177,7 @@
           event.preventDefault();
         showPopup(reminderMessage, 'Reminder', {
           mode: 'confirm',
+          center: true,
           onYes: () => {
             window.open(url, '_blank');
           }
