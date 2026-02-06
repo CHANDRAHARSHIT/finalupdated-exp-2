@@ -1630,7 +1630,7 @@ body.is-modal-open {
 #modalMessage {
   color: #3b2f24;
   white-space: pre-line;
-  text-align: left;
+  text-align: justify;
   line-height: 1.55;
   margin: 0;
 }
