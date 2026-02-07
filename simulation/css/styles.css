@@ -812,7 +812,7 @@ h3 {
 ========================= */
 .workspace {
   position: absolute;
-  top: 326px;
+  top: 380px;
   left: 206px;
   height: 295px;
   display: flex;
@@ -1003,6 +1003,7 @@ h3 {
 }
 
 .observation-header {
+ 
   position: relative;
   right: 10px;
   display: flex;
@@ -1063,15 +1064,18 @@ h3 {
   border-collapse: collapse;
   background: #f4eee2;
   border: 2px solid var(--ink);
+  
 }
 
 #observationTable th,
 #observationTable td {
+   
   border: 1px solid var(--ink);
   padding: 8px;
   text-align: center;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
 #observationTable thead {
@@ -1476,7 +1480,7 @@ h3 {
   align-items: center;
   gap: 8px;
 }
-
+ 
 .components-skip-btn {
   padding: 8px 12px;
   border-radius: 999px;
@@ -1626,7 +1630,7 @@ body.is-modal-open {
 #modalMessage {
   color: #3b2f24;
   white-space: pre-line;
-  text-align: left;
+  text-align: center;
   line-height: 1.55;
   margin: 0;
 }
@@ -2370,41 +2374,93 @@ body.is-modal-open {
    PRINT LAYOUT
 ========================= */
 @media print {
+  :root {
+    /* Downscale the whole experience while keeping the exact layout proportions */
+    --print-scale: 0.58;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  html,
   body {
+    margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: var(--bg);
   }
 
-  .panel {
-    width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
+  body {
+    /* Scale everything instead of reflowing the grid so the printed view matches the UI */
+    zoom: var(--print-scale);
+    transform-origin: top left;
   }
 
-  .panel-footer {
-    width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    margin: 0 !important;
-  }
-
-  /* Hide interactive UI */
-    #pill-stack,
-    .graph-actions,
-    .instructions-panel,
-    .instruction-overlay,
-    .chatbot-widget,
-    .hover-tooltip {
-      display: none !important;
+  /* Fallback for browsers that do not support zoom (e.g., Firefox) */
+  @supports not (zoom: 1) {
+    body {
+      transform: scale(var(--print-scale));
+      width: calc(100% / var(--print-scale));
     }
+  }
 
-  .graph-bars {
+  /* Force desktop layout even if the print viewport is narrow */
+  .top-row {
+    grid-template-columns: 1fr 2.6fr 1.2fr !important;
+    padding-bottom: clamp(18px, 1.5vw, 24px);
+  }
+
+  .left-column,
+  .center-column {
+    border-right: 3px solid var(--ink);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .observation-floating {
+    position: absolute !important;
+    top: 250px;
+    right: -50px;
+    transform: translateX(calc(100% + clamp(8px, 2vw, 16px)));
+    width: clamp(220px, 22vw, 340px);
+    max-width: none;
+    min-width: 0;
+    margin-top: 0;
+  }
+
+  .observation-section,
+  .graph-section,
+  .panel-footer {
+    page-break-inside: avoid;
+  }
+
+  .panel,
+  .panel-footer {
+    width: var(--panel-max) !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+
+  /* Hide only floating helpers during print */
+  #pill-stack,
+  .graph-actions,
+  .instructions-panel,
+  .instruction-overlay,
+  .chatbot-widget,
+  .hover-tooltip {
     display: none !important;
   }
 
-  #graphPlot {
-    display: block !important;
-  }
+  .graph-bars { display: none !important; }
+  #graphPlot { display: block !important; }
 }
 
 /* =========================

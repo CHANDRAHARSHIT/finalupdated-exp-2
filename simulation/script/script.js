@@ -867,9 +867,7 @@ function setupJsPlumb() {
   sharedControls.setMcbState = setMcbState;
   sharedControls.starterHandle = starterHandle;
 
-  const mcbLabel = document.querySelector(".mcb-label");
-  const mcbTargets = [mcbImg, mcbLabel].filter(Boolean);
-  if (mcbTargets.length) {
+  if (mcbImg) {
     const handleMcbClick = function () {
       if (!connectionsVerified) {
         showPopup("Make and check the connections before turning on the MCB.");
@@ -882,10 +880,8 @@ function setupJsPlumb() {
       }
     };
 
-    mcbTargets.forEach((el) => {
-      el.style.cursor = "pointer";
-      el.addEventListener("click", handleMcbClick);
-    });
+    mcbImg.style.cursor = "pointer";
+    mcbImg.addEventListener("click", handleMcbClick);
   }
 
   // Click on label buttons (e.g., .point-R) to remove connections from corresponding point
@@ -992,45 +988,31 @@ function setupJsPlumb() {
         return;
       }
 
-      const formatList = (list, options = {}) =>
-        list
-          .slice(0, 5)
-          .map((k, index) => {
-            const label = formatConnectionDisplay(k);
-            if (!label) return "";
-            if (options.labelWrongExtras && !getConnectionNumber(k)) {
-              return `Wrong connection ${index + 1}: ${label}`;
-            }
-            return label;
-          })
-          .filter(Boolean)
-          .join(", ");
-      const formatSpeechList = (list, options = {}) =>
-        list
-          .slice(0, 5)
-          .map((k, index) => {
-            const speech = formatConnectionSpeech(k);
-            if (!speech) return "";
-            if (options.labelWrongExtras && !getConnectionNumber(k)) {
-              return `wrong connection ${index + 1}, ${speech}`;
-            }
-            return speech;
-          })
-          .filter(Boolean)
-          .join(", ");
-      let message = "Connection not correct";
-      let speechMessage = "Connection not correct.";
-      if (illegal.length) {
-        message += `\nWrong/extra connections detected${illegal.length > 5 ? " (showing first few)" : ""}: ${formatList(illegal, { labelWrongExtras: true })}`;
-        speechMessage += ` Wrong connections: ${formatSpeechList(illegal, { labelWrongExtras: true })}.`;
+      // Find the next missing connection in defined order
+      let nextMissing = null;
+      for (const pair of requiredPairs) {
+        const [a, b] = pair.split("-");
+        const key = connectionKey(a, b);
+        if (!seenKeys.has(key)) {
+          nextMissing = key;
+          break;
+        }
       }
-      if (missing.length) {
-        message += `\nMissing ${missing.length} required connection(s)${missing.length > 5 ? " (showing first few)" : ""}: ${formatList(missing)}`;
-        speechMessage += ` Missing connections: ${formatSpeechList(missing)}.`;
+
+      const firstIllegal = illegal[0] || null;
+      const message = "Please make all the connections first.";
+
+      let speechMessage = "Please make all the connections first.";
+      if (firstIllegal) {
+        speechMessage += ` Remove wrong connection ${formatConnectionSpeech(firstIllegal)}.`;
       }
-      if (guideSpeechActive()) {
-        speakLocal(speechMessage, { interruptFirst: true });
-      } else {
+      if (nextMissing) {
+        speechMessage += ` Next connection: ${formatConnectionSpeech(nextMissing)}.`;
+      }
+
+      // Always attempt to speak; still show popup fallback if speech is inactive.
+      speakLocal(speechMessage, { interruptFirst: true });
+      if (!guideSpeechActive()) {
         showPopup(message);
       }
       setMcbState(false, { silent: true });
@@ -1054,6 +1036,7 @@ function setupJsPlumb() {
   const autoConnectBtn = findButtonByLabel("Auto Connect");
   if (autoConnectBtn) {
     autoConnectBtn.addEventListener("click", function () {
+      autoConnectBtn.disabled = true;
       isAutoConnecting = true;
       suppressAllAutoVoices = true;
       suppressGuideDuringAutoConnect = true;
@@ -1551,7 +1534,13 @@ function setupJsPlumb() {
   );
 })();
 
- 
+
+// Disable the Check button once the MCB is turned on
+window.addEventListener(MCB_TURNED_ON_EVENT, () => {
+  const btn = findButtonByLabel("Check") || findButtonByLabel("Check Connections");
+  if (btn) btn.disabled = true;
+});
+
 const NEEDLE_TRANSFORM_TRANSLATE = "translate(-50%, -82.5%)";
 
 // Calibrated for the 0-30 A ammeters and 0-410 V voltmeters used in this lab.
@@ -1723,6 +1712,18 @@ document.addEventListener("keydown", (e) => {
     el.style.transform = `${NEEDLE_TRANSFORM_TRANSLATE} rotate(${angleDeg}deg)`;
   }
 
+  // Show supply voltage as soon as the starter handle is moved to ON.
+  window.addEventListener(STARTER_MOVED_EVENT, () => {
+    if (!needle3) return;
+    setNeedleRotation(needle3, voltageToAngle(225));
+  });
+
+  // Park voltmeter-1 when the MCB is turned off.
+  window.addEventListener(MCB_TURNED_OFF_EVENT, () => {
+    if (!needle3) return;
+    setNeedleRotation(needle3, voltageToAngle(0));
+  });
+
   function resolveAngle(manualAngles, idx, fallbackAngle) {
     const manual = manualAngles && Number.isFinite(manualAngles[idx]) ? manualAngles[idx] : null;
     return Number.isFinite(manual) ? manual : fallbackAngle;
@@ -1804,7 +1805,7 @@ document.addEventListener("keydown", (e) => {
           line: { color: "#1b6fb8", width: 3 }
         };
         const layout = {
-          title: { text: "<b>Voltage (V) vs Load Current (A)</b>" },
+          title: { text: "<b>Terminal Voltage (V) vs Load Current (A)</b>" },
           margin: { l: 60, r: 20, t: 40, b: 50 },
           xaxis: {
             title: "<b>Load Current (A)</b>",
@@ -1812,7 +1813,7 @@ document.addEventListener("keydown", (e) => {
             tickmode: "array",
             tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
           },
-          yaxis: { title: "<b>Voltage (V)</b>", gridcolor: "rgba(0, 0, 0, 0.07)" },
+          yaxis: { title: "<b>Terminal Voltage (V)</b>", gridcolor: "rgba(0, 0, 0, 0.07)" },
           paper_bgcolor: "rgba(0,0,0,0)",
           plot_bgcolor: "rgba(0,0,0,0)"
         };
@@ -1985,28 +1986,49 @@ tr:nth-child(even) { background-color: #f8fbff; }
   max-width: 180px;
   object-fit: contain;
 }
-.print-btn {
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
   margin-top: 28px;
-  padding: 12px 28px;
-  font-size: 16px;
-  background: linear-gradient(to right, #2f7bfa, #1f62d0);
-  color: white;
+}
+.print-btn,
+.download-btn {
+  padding: 12px 24px;
+  font-size: 15px;
   border: none;
   border-radius: 30px;
+  color: white;
   cursor: pointer;
   transition: all 0.25s ease;
 }
-.print-btn:hover {
+.print-btn {
+  background: linear-gradient(to right, #2f7bfa, #1f62d0);
+}
+.download-btn {
+  background: linear-gradient(to right, #28a745, #1f8d38);
+}
+.print-btn:hover,
+.download-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(31,45,61,0.12);
 }
-@media print { .print-btn { display:none; } body { margin:0; box-shadow:none; border:none; padding:0; } }
+@media print {
+  .print-btn,
+  .download-btn,
+  .report-actions { display:none; }
+  body { margin:0; box-shadow:none; border:none; padding:0; }
+}
     `;
 
     const startTimeText = new Date(sessionStart).toLocaleTimeString();
     const endTime = Date.now();
     const endTimeText = new Date(endTime).toLocaleTimeString();
-    const durationMinutes = Math.max(0, Math.round(((endTime - sessionStart) / 60000) * 10) / 10);
+    const durationMs = Math.max(0, endTime - sessionStart);
+    const durationTotalSeconds = Math.floor(durationMs / 1000);
+    const durationMinutes = Math.floor(durationTotalSeconds / 60);
+    const durationSeconds = durationTotalSeconds % 60;
+    const durationText = `${durationMinutes} min ${String(durationSeconds).padStart(2, "0")} sec`;
     if (typeof window.labTracking?.markSimulationEnd === "function") {
       window.labTracking.markSimulationEnd(endTime);
     }
@@ -2021,7 +2043,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
   <style>${css}</style>
   <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
 </head>
-<body>
+<body id="report-root">
 <div class="header-row">
   <img src="../images/image.png" class="vl-logo" />
   <h1>Virtual Labs Simulation Report</h1>
@@ -2032,11 +2054,11 @@ tr:nth-child(even) { background-color: #f8fbff; }
     <p><span class="label">Experiment Title:</span>To study the Load Characteristics of DC shunt generator</p>
     <p><span class="label">Date:</span> ${now.toLocaleDateString()}</p>
     <div class="info-grid">
-      <div class="info-card"><span class="label">Start Time:</span><br>${startTimeText}</div>
-      <div class="info-card"><span class="label">End Time:</span><br>${endTimeText}</div>
-      <div class="info-card"><span class="label">Total Time Spent:</span><br>${durationMinutes} minutes</div>
+        <div class="info-card"><span class="label">Start Time:</span><br>${startTimeText}</div>
+        <div class="info-card"><span class="label">End Time:</span><br>${endTimeText}</div>
+        <div class="info-card"><span class="label">Total Time Spent:</span><br>${durationText}</div>
+      </div>
     </div>
-  </div>
 
   <div class="section">
     <h2>Summary</h2>
@@ -2065,7 +2087,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
     <h3>Observation Table</h3>
     <table>
       <thead>
-        <tr><th>S.No.</th><th>Current (A)</th><th>Voltage (V)</th></tr>
+        <tr><th>S.No.</th><th>Load Current (A)</th><th>Terminal Voltage (V)</th></tr>
       </thead>
       <tbody>
         ${observationRows.length ? observationRows.map(function (r) {
@@ -2080,29 +2102,76 @@ tr:nth-child(even) { background-color: #f8fbff; }
     <div id="report-graph" style="position:relative;width:100%;height:360px;"></div>
   </div>
 
-  <button class="print-btn" onclick="window.print()">PRINT</button>
+  <div class="report-actions">
+    <button class="print-btn" onclick="window.print()">PRINT</button>
+    <button class="download-btn" onclick="downloadReport()">DOWNLOAD</button>
+  </div>
 
   <script>
     (function() {
       var currents = ${JSON.stringify(currentValues)};
       var voltages = ${JSON.stringify(voltageValues)};
+      var graphContainer = document.getElementById('report-graph');
+      var graphReady = Promise.resolve();
+
       if (currents.length && voltages.length) {
-        var trace = { x: currents, y: voltages, type: 'scatter', mode: 'lines+markers', name: 'V vs I', line: { color: '#3498db' } };
+         var trace = { x: currents, y: voltages, type: 'scatter', mode: 'lines+markers', name: 'Terminal Voltage (V) vs Load Current (A)', line: { color: '#3498db' } };
         var layout = {
-          title: { text: 'Terminal Voltage vs Load Current' },
+          title: { text: 'Terminal Voltage (V) vs Load Current (A)' },
           xaxis: {
-            title: 'Load Current (A)',
+            title: { text: 'Load Current (A)', standoff: 12 },
+            automargin: true,
             tickmode: 'array',
             tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
           },
-          yaxis: { title: 'Voltage (V)' },
-          margin: { t: 60, r: 20, l: 60, b: 60 }
+          yaxis: { title: { text: 'Terminal Voltage (V)', standoff: 12 }, automargin: true },
+          margin: { t: 70, r: 30, l: 80, b: 70 }
         };
-        Plotly.newPlot('report-graph', [trace], layout, {displaylogo:false});
+        graphReady = Plotly.newPlot('report-graph', [trace], layout, {displaylogo:false}).then(function(gd) {
+          return Plotly.toImage(gd, {format:'png', width: gd.offsetWidth || 900, height: gd.offsetHeight || 360});
+        }).then(function(imgData) {
+          var img = new Image();
+          img.src = imgData;
+          img.alt = 'Terminal Voltage (V) vs Load Current (A)';
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          graphContainer.innerHTML = '';
+          graphContainer.appendChild(img);
+        }).catch(function() {
+          // keep the interactive graph if snapshot fails
+        });
       } else {
-        document.getElementById('report-graph').innerHTML = '<em>No readings available to plot.</em>';
+        graphContainer.innerHTML = '<em>No readings available to plot.</em>';
       }
+
+      window.reportGraphReady = graphReady;
     })();
+    function ensureHtml2Pdf() {
+      return new Promise(function(resolve, reject) {
+        if (window.html2pdf) return resolve();
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+    function downloadReport() {
+      var waitForGraph = window.reportGraphReady || Promise.resolve();
+      waitForGraph.then(ensureHtml2Pdf).then(function() {
+        var element = document.getElementById('report-root') || document.body;
+        var opts = {
+          margin: [0.3, 0.3, 0.3, 0.3],
+          filename: 'simulation-report.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        return window.html2pdf().set(opts).from(element).save();
+      }).catch(function() {
+        alert('Unable to download the report automatically. Please use your browser\\'s Save as PDF option.');
+      });
+    }
 </script>
 </body>
 </html>`;
@@ -2298,6 +2367,12 @@ tr:nth-child(even) { background-color: #f8fbff; }
     graphPlotAlertShown = false;
     graphPlotted = false;
 
+    // Re-enable primary controls after reset
+    const resetCheckBtn = findButtonByLabel("Check") || findButtonByLabel("Check Connections");
+    if (resetCheckBtn) resetCheckBtn.disabled = false;
+    const resetAutoBtn = findButtonByLabel("Auto Connect");
+    if (resetAutoBtn) resetAutoBtn.disabled = false;
+
     if (observationBody) {
       observationBody.innerHTML = "";
     }
@@ -2407,64 +2482,59 @@ tr:nth-child(even) { background-color: #f8fbff; }
     tooltipLayer.className = "hover-tooltip";
     tooltipLayer.innerHTML =
       '<div class="hover-tooltip__body"><div class="hover-tooltip__accent"></div><div class="hover-tooltip__text"></div></div>';
-    const tooltipText = tooltipLayer.querySelector(".hover-tooltip__text");
-    document.body.appendChild(tooltipLayer);
+      const tooltipText = tooltipLayer.querySelector(".hover-tooltip__text");
+      document.body.appendChild(tooltipLayer);
 
-    const tooltips = [
-      {
-        id: "mcb",
-        selector: ".mcb-toggle, .mcb-label, .mcb-block",
-        text: "MCB: Main supply breaker for the setup; trips on overload/short-circuit to protect the circuit and users."
-      },
-      {
-        id: "starter",
-        selector: ".starter-block, .starter-body, .starter-handle, .starter-label",
+      const tooltips = [
+        {
+          id: "mcb",
+          selector: ".mcb-toggle, .mcb-block img",
+          text: "MCB: Main supply breaker for the setup; trips on overload/short-circuit to protect the circuit and users."
+        },
+        {
+          id: "starter",
+          selector: ".starter-body, .starter-handle",
         text: "3-Point Starter: Limits the DC motor starting current and provides no-volt/overload protection; drag the handle after turning ON the MCB."
       },
       {
         id: "lamp-load",
-        selector: ".lampboard-dropdown, #number, .lamp-board, .lamp-grid, .lamp-bulb, .lamp-load-label",
+        selector: ".lamp-bulb",
         text: "Lamp Load: Variable resistive bulb bank used to change load; select the number of bulbs to vary current and observe voltage regulation."
       },
       {
         id: "ammeter-1",
-        selector: ".meters > .meter-card:nth-of-type(1), #ammter1-label",
+        selector: ".meter-card:nth-of-type(1) > img",
         text: "Ammeter-1: Measures the motor/supply current (connected in series)."
       },
       {
         id: "voltmeter-1",
-        selector: ".meters > .meter-card:nth-of-type(2), #voltmeter1-label",
+        selector: ".meter-card:nth-of-type(2) > img",
         text: "Voltmeter-1: Measures the supply/line voltage (connected across the source)."
       },
       {
         id: "ammeter-2",
-        selector: ".meters > .meter-card:nth-of-type(3), #ammter2-label",
+        selector: ".meter-card:nth-of-type(3) > img",
         text: "Ammeter-2: Measures the load current through the lamp load (connected in series with the load)."
       },
       {
         id: "voltmeter-2",
-        selector: ".meters > .meter-card:nth-of-type(4), #voltmeter2-label",
+        selector: ".meter-card:nth-of-type(4) > img",
         text: "Voltmeter-2: Measures the generator terminal voltage (connected across generator terminals)."
       },
       {
         id: "dc-motor",
-        selector: ".motor-box, .motor-box img, .dc-motor-label",
+        selector: ".motor-box > img",
         text: "DC Shunt Motor: Prime mover converting electrical power to mechanical power to drive the generator."
       },
       {
         id: "coupler",
-        selector: ".coupler, .coupler img",
+        selector: ".coupler > img",
         text: "Coupling/Shaft: Mechanical link that transfers torque from the motor to the generator."
       },
       {
         id: "dc-generator",
-        selector: ".generator-box, .generator-body, .generator-rotor, .dc-generator-label",
+        selector: ".generator-body, .generator-rotor",
         text: "DC Shunt Generator: Converts mechanical power from the motor into DC output for the load; terminal voltage is measured on Voltmeter-2."
-      },
-      {
-        id: "observation-table",
-        selector: ".observation-section, #observationTable, #observationBody",
-        text: "Observation Table: Stores recorded readings of load current and terminal voltage for plotting and the report."
       },
       // {
       //   id: "output-graph",
@@ -2537,9 +2607,39 @@ tr:nth-child(even) { background-color: #f8fbff; }
         );
       }
 
+      // Ensure MCB definition shows when its image is clicked.
+      const mcbImage = document.querySelector(".mcb-toggle");
+      if (mcbImage) {
+        mcbImage.addEventListener("click", function (event) {
+          const entry = tooltips.find(t => t.id === "mcb");
+          if (!entry) return;
+          if (activeTarget === mcbImage) {
+            activeTarget = null;
+            hideTip();
+            return;
+          }
+          activeTarget = mcbImage;
+          showTip(entry.text, event);
+          attachLeaveHandler(mcbImage);
+        });
+      }
+
       document.addEventListener("click", function (event) {
-        const found = findEntry(event.target);
-        if (!found) {
+        const searchTarget = event.target.closest("img") || event.target;
+        const found = findEntry(searchTarget);
+        if (!found || !found.match) {
+          if (activeTarget) {
+            activeTarget = null;
+            hideTip();
+          }
+          return;
+        }
+        // Ensure we attach to the actual image element for leave handling.
+        if (found.id === "mcb" && found.match.tagName !== "IMG") {
+          const mcbImgEl = document.querySelector(".mcb-toggle");
+          if (mcbImgEl) found.match = mcbImgEl;
+        }
+        if (found.match.tagName !== "IMG") {
           if (activeTarget) {
             activeTarget = null;
             hideTip();
@@ -2717,6 +2817,38 @@ tr:nth-child(even) { background-color: #f8fbff; }
   let autoPlayPending = !hasAutoPlayedAudio();
   let autoPlayRequested = false;
   let autoPlayRetryArmed = false;
+  const COMPONENTS_EXIT_MESSAGE =
+    "Now that you are familiar with all the components used in this experiment, you may now start the experiment.\n\nAn AI guide is available to assist you at every step.";
+
+  function showComponentsExitAlert() {
+    const speakBtn = document.querySelector(".speak-btn");
+    const ATTENTION_CLASS = "speak-attention";
+
+    if (speakBtn) {
+      speakBtn.classList.add(ATTENTION_CLASS);
+      const clearAttention = () => {
+        speakBtn.classList.remove(ATTENTION_CLASS);
+      };
+      speakBtn.addEventListener("click", clearAttention, { once: true });
+    }
+
+    showPopup(COMPONENTS_EXIT_MESSAGE, "Instruction");
+
+    const modalCloseBtn = document.querySelector("#warningModal [data-modal-close]");
+    if (modalCloseBtn && speakBtn) {
+      modalCloseBtn.addEventListener(
+        "click",
+        () => {
+          setTimeout(() => {
+            try {
+              speakBtn.focus({ preventScroll: true });
+            } catch (e) {}
+          }, 520);
+        },
+        { once: true }
+      );
+    }
+  }
 
   function markAutoPlayComplete() {
     if (!autoPlayPending) return;
@@ -2807,39 +2939,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
       }
       if (data.type === "components-tour-complete") {
         closeComponentsModal({ skip: true });
-
-        const speakBtn = document.querySelector(".speak-btn");
-        if (speakBtn) {
-          const ATTENTION_CLASS = "speak-attention";
-          speakBtn.classList.add(ATTENTION_CLASS);
-
-          const clearAttention = () => {
-            speakBtn.classList.remove(ATTENTION_CLASS);
-          };
-
-          speakBtn.addEventListener("click", clearAttention, { once: true });
-        }
-
-        const message =
-          "Now that you are familiar with all the components used in this experiment, you may now start the experiment.\n\nAn AI guide is available to assist you at every step.";
-        showPopup(message, "Instruction");
-
-        const modalCloseBtn = document.querySelector(
-          "#warningModal [data-modal-close]"
-        );
-        if (modalCloseBtn && speakBtn) {
-          modalCloseBtn.addEventListener(
-            "click",
-            () => {
-              setTimeout(() => {
-                try {
-                  speakBtn.focus({ preventScroll: true });
-                } catch (e) {}
-              }, 520);
-            },
-            { once: true }
-          );
-        }
+        showComponentsExitAlert();
         return;
       }
     });
@@ -2856,7 +2956,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
       maybeAutoPlayAudio();
     }
 
-    function closeComponentsModal({ skip = false } = {}) {
+    function closeComponentsModal({ skip = false, showAlert = false } = {}) {
       modal.classList.add("is-hidden");
       document.body.classList.remove("is-modal-open");
       postAudioMessage("component-audio-stop");
@@ -2869,8 +2969,12 @@ tr:nth-child(even) { background-color: #f8fbff; }
         try {
           STORAGE.setItem(STORAGE_KEY, "1");
         } catch (e) {}
+      }
+
+      if (showAlert) {
+        showComponentsExitAlert();
+      }
     }
-  }
 
   // Auto open when page loads
   window.addEventListener("load", () => {
@@ -2886,12 +2990,55 @@ tr:nth-child(even) { background-color: #f8fbff; }
   });
 
   // Close buttons + backdrop
-  closeEls.forEach((el) => el.addEventListener("click", () => closeComponentsModal()));
-  if (skipBtn) skipBtn.addEventListener("click", () => closeComponentsModal({ skip: true }));
+  closeEls.forEach((el) =>
+    el.addEventListener("click", () => closeComponentsModal({ showAlert: true }))
+  );
+  if (skipBtn)
+    skipBtn.addEventListener("click", () =>
+      closeComponentsModal({ skip: true, showAlert: true })
+    );
 
   // ESC key to close
   document.addEventListener("keydown", (e) => {
     if (modal.classList.contains("is-hidden")) return;
-    if (e.key === "Escape") closeComponentsModal();
+    if (e.key === "Escape") closeComponentsModal({ showAlert: true });
   });
+})();
+
+/**
+ * Keep the printed layout identical to the on‑screen layout by dynamically
+ * scaling the panel to the available print width and locking the desktop
+ * breakpoints even inside the print dialog.
+ */
+(function setupPrintScaling() {
+  function updatePrintScale() {
+    const panel = document.querySelector(".panel");
+    if (!panel) return;
+
+    // Approximate printable width: viewport minus the 10mm page margins set in CSS
+    const pxPerMm = 3.78; // 96dpi → 1mm ≈ 3.78px
+    const marginPx = 10 * pxPerMm * 2; // left + right
+    const available = Math.max(320, window.innerWidth - marginPx);
+    const needed = Math.max(panel.scrollWidth || 0, panel.offsetWidth || 0);
+    if (!needed) return;
+
+    const scale = Math.min(1, Math.max(0.35, available / needed));
+    document.documentElement.style.setProperty("--print-scale", scale.toFixed(3));
+  }
+
+  function clearPrintScale() {
+    document.documentElement.style.removeProperty("--print-scale");
+  }
+
+  window.addEventListener("beforeprint", updatePrintScale);
+  window.addEventListener("afterprint", clearPrintScale);
+
+  if (window.matchMedia) {
+    const mq = window.matchMedia("print");
+    const listener = (e) => {
+      if (e.matches) updatePrintScale();
+    };
+    // Support modern and older browsers
+    mq.addEventListener ? mq.addEventListener("change", listener) : mq.addListener(listener);
+  }
 })();

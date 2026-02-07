@@ -56,6 +56,7 @@ body.is-modal-open {
   margin: 0;
   color: #1f2937;
   line-height: 1.7;
+  text-align: justify;
 }
 
 .modal-actions {
