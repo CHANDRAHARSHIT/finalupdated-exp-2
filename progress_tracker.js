@@ -186,17 +186,11 @@
     const links = Array.from(document.querySelectorAll("[data-progress-report-link], a[href*=\"progressreport\"]"));
     links.forEach((link) => {
       if (disabled) {
-        link.classList.add("opacity-50", "cursor-not-allowed");
-        link.setAttribute("aria-disabled", "true");
-        link.setAttribute("title", "Fill user details and complete the simulation to enable Progress Report");
-        link.style.opacity = "0.55";
-        link.style.cursor = "not-allowed";
+        link.classList.add("opacity-70");
+        link.setAttribute("title", "Progress Report will show once user details and simulation report are available.");
       } else {
-        link.classList.remove("opacity-50", "cursor-not-allowed");
-        link.removeAttribute("aria-disabled");
+        link.classList.remove("opacity-70");
         link.removeAttribute("title");
-        link.style.opacity = "";
-        link.style.cursor = "";
       }
     });
   }
@@ -231,9 +225,8 @@
       const needsUser = !hasUser();
       const needsSim = !hasSimulationReport();
       if (!needsUser && !needsSim) return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
+      // Do not block navigation; the progressreport page shows its own lock state.
+      // We only surface a gentle notice without preventing default.
       showReportBlockMessage(needsUser, needsSim);
     }, true);
 

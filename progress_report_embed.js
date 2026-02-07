@@ -111,18 +111,18 @@
     return !!document.getElementById('progressreport');
   }
 
-  function shouldEmbedProgress(isAimPage) {
-    return isAimPage || hasEmbeddedProgressSection();
+  // Determine if this page already embeds the progress report inline.
+  function shouldEmbedProgress() {
+    return hasEmbeddedProgressSection();
+  }
+
+  function getProgressHrefTarget() {
+    return shouldEmbedProgress() ? '#progressreport' : 'progressreport.html';
   }
 
   function ensureProgressSection(main) {
-    if (!main) return;
-    if (document.getElementById('progressreport')) return;
-    const section = document.createElement('section');
-    section.id = 'progressreport';
-    section.className = 'section-content vl-card mb-8 p-6 animate-fadeInUp';
-    section.innerHTML = getProgressSectionTemplate(getReportLabel());
-    main.appendChild(section);
+    // Embedding is disabled.
+    return;
   }
 
   function ensureProgressNav(isAimPage) {
@@ -137,8 +137,7 @@
 
     if (anchor) {
       if (!anchor.id) anchor.id = 'progressReportNav';
-      const targetHref = shouldEmbedProgress(isAimPage) ? '#progressreport' : 'progressreport.html';
-      anchor.href = targetHref;
+      anchor.href = getProgressHrefTarget();
       anchor.setAttribute('data-progress-report-link', '');
       anchor.removeAttribute('target');
       anchor.setAttribute('target', '_self');
@@ -149,7 +148,7 @@
 
     anchor = document.createElement('a');
     anchor.id = 'progressReportNav';
-    anchor.href = shouldEmbedProgress(isAimPage) ? '#progressreport' : 'progressreport.html';
+    anchor.href = getProgressHrefTarget();
     anchor.setAttribute('target', '_self');
     anchor.setAttribute('rel', 'noopener');
     anchor.className = 'menu-item flex items-center px-4 py-3 text-gray-700 rounded-lg group';
@@ -175,14 +174,12 @@
 
   function markHeaderProgressLinks(isAimPage) {
     const headerLinks = Array.from(document.querySelectorAll('.top-nav .nav-link'));
-    const shouldEmbed = shouldEmbedProgress(isAimPage);
+    const progressTarget = getProgressHrefTarget();
     headerLinks.forEach((link) => {
       const href = link.getAttribute('href') || '';
       if (href.includes('progressreport')) {
         link.setAttribute('data-progress-report-link', '');
-        if (shouldEmbed) {
-          link.href = '#progressreport';
-        }
+        link.href = progressTarget;
         // Always stay in the same tab/window for the progress report
         link.setAttribute('target', '_self');
       }
@@ -254,14 +251,15 @@
     const isAimPage = pageName === 'aim.html';
     const main = document.querySelector('main');
     ensureModals();
-    if (isAimPage && main) ensureProgressSection(main);
+    // embedding disabled
     ensureProgressNav(isAimPage);
     markHeaderProgressLinks(isAimPage);
     setActiveMenu();
 
     VP().initPage();
 
-    const progressReturnUrl = shouldEmbedProgress(isAimPage) ? `${pageName}#progressreport` : 'progressreport.html';
+    const inlineProgress = shouldEmbedProgress();
+    const progressReturnUrl = inlineProgress ? `${pageName}#progressreport` : 'progressreport.html';
 
     const userFormPrompt = document.getElementById('userFormPrompt');
     const promptYes = document.getElementById('promptYes');

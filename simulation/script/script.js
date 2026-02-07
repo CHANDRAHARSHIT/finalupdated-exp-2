@@ -1888,143 +1888,311 @@ document.addEventListener("keydown", (e) => {
 
     const now = new Date();
     const css = `
+:root {
+  --lab-gradient: linear-gradient(120deg, #021a2c, #064073, #0b60a8);
+  --lab-gradient-soft: linear-gradient(140deg, #eef2ff, #f8fbff);
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --border-muted: rgba(15, 23, 42, 0.08);
+}
+* {
+  box-sizing: border-box;
+}
 body {
+  margin: 0;
   font-family: 'Inter', 'Segoe UI', sans-serif;
-  background: #f3f6fb;
-  color: #1f2d3d;
-  margin: 40px auto;
-  max-width: 960px;
-  padding: 32px;
-  background-color: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #e5e9f2;
-  box-shadow: 0 10px 30px rgba(31, 45, 61, 0.12);
-  line-height: 1.65;
+  background: linear-gradient(145deg, #e0e7ff, #f8fafc);
+  color: var(--text-dark);
+  min-height: 100vh;
 }
-h1, h2, h3 { color: #1f2d3d; margin-top: 0; font-weight: 700; }
-h1 {
-  font-size: 28px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 3px solid #2f7bfa;
+.vl-header {
+  height: 70px;
+  background: var(--lab-gradient);
+  box-shadow: 0 10px 30px rgba(2, 26, 44, 0.35);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
 }
-h2 { font-size: 22px; margin-bottom: 10px; color: #2b3f55; }
-h3 { font-size: 18px; margin-bottom: 8px; }
-.section {
-  background: linear-gradient(135deg, #f8fbff 0%, #f3f6fb 100%);
-  padding: 20px 22px;
-  margin-bottom: 28px;
-  border-radius: 12px;
-  border: 1px solid #e5e9f2;
-  box-shadow: 0 4px 12px rgba(31,45,61,0.06);
-}
-.label { font-weight: 600; color: #1f2d3d; }
-ul { padding-left: 20px; margin-top: 10px; }
-.two-column-list { column-count: 2; column-gap: 40px; list-style-position: inside; margin-top: 10px; }
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-.info-card {
-  background: #fff;
-  border: 1px solid #e5e9f2;
-  border-radius: 10px;
-  padding: 12px 14px;
-  box-shadow: 0 4px 10px rgba(31,45,61,0.05);
-  font-size: 14px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-  box-shadow: 0 2px 10px rgba(31, 45, 61, 0.06);
-  background-color: white;
-  border-radius: 10px;
-  overflow: hidden;
-}
-th, td {
-  border: 1px solid #e5e9f2;
-  padding: 12px;
-  text-align: center;
-  font-size: 15px;
-}
-th {
-  background: linear-gradient(135deg, #2f7bfa 0%, #1f62d0 100%);
-  color: white;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-tr:nth-child(even) { background-color: #f8fbff; }
-.graph {
-  text-align: center;
-  margin-top: 24px;
-  padding: 20px;
-  border: 1px solid #e5e9f2;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 4px 10px rgba(31,45,61,0.06);
-}
-.header-row {
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 26px;
+  height: 100%;
 }
-.header-row h1 {
-  flex: 1;
-  text-align: center;
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: #fff;
+  text-decoration: none;
+}
+.logo-container img {
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.logo-title {
+  font-size: 1.15rem;
   margin: 0;
+  letter-spacing: 0.04em;
+}
+.logo-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #d3d8f4;
+}
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.nav-link {
+  position: relative;
+  color: #e2e8f0;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.35rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--lab-gradient);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.2s ease;
+}
+.nav-link:hover,
+.nav-link:focus {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+.nav-link:hover::after,
+.nav-link:focus::after {
+  transform: scaleX(1);
+}
+.report-container {
+  max-width: 1120px;
+  margin: 110px auto 60px;
+  padding: 2.75rem 1.5rem 3rem;
+  background: #f8fbff;
+  border-radius: 1.8rem;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
+  position: relative;
+}
+.report-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 .badge {
-  padding: 8px 14px;
-  border-radius: 20px;
-  background: #e8f1ff;
-  color: #1f62d0;
-  font-weight: 600;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  background: #e6efff;
+  color: #0f62d0;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  text-transform: uppercase;
 }
-.vl-logo {
-  height: 70px;
-  width: auto;
-  max-width: 180px;
-  object-fit: contain;
-  flex-shrink: 0;
+.report-title {
+  margin: 0.35rem 0 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-dark);
 }
-.report-actions {
+.report-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+.report-toolbar {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
-.print-btn,
-.download-btn {
-  padding: 12px 24px;
-  font-size: 15px;
+.btn {
   border: none;
-  border-radius: 30px;
-  color: white;
+  border-radius: 999px;
+  padding: 0.85rem 1.65rem;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.print-btn {
-  background: linear-gradient(to right, #2f7bfa, #1f62d0);
+.btn.primary {
+  background: var(--lab-gradient);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(2, 26, 44, 0.25);
 }
-.download-btn {
-  background: linear-gradient(to right, #28a745, #1f8d38);
+.btn.secondary {
+  background: linear-gradient(120deg, #1d4ed8, #06b6d4);
+  color: #fff;
 }
-.print-btn:hover,
-.download-btn:hover {
+.btn.outline {
+  background: #fff;
+  color: #0b60a8;
+  border: 1px solid rgba(11, 96, 168, 0.8);
+}
+.btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(31,45,61,0.12);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+.report-card {
+  background: #fff;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 1.9rem;
+  margin-top: 1.75rem;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.card-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.tag {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: #eef2ff;
+  color: #1d4ed8;
+  border: 1px solid #cdd5e4;
+}
+.tag.subtle {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+.info-block {
+  background: var(--lab-gradient-soft);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-muted);
+}
+.info-block .label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+.info-block .info-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+.summary-card ul {
+  list-style: none;
+  padding: 0;
+  columns: 2;
+  gap: 0.5rem;
+}
+.summary-card li {
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+}
+.table-wrapper {
+  overflow-x: auto;
+}
+.assessment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.6rem;
+}
+.assessment-table th,
+.assessment-table td {
+  padding: 0.9rem 1.1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 0.95rem;
+}
+.assessment-table th {
+  background: linear-gradient(120deg, #e0e7ff, #c7d2fe);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+}
+.observation-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.observation-card th,
+.observation-card td {
+  padding: 0.85rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 0.95rem;
+}
+.observation-card th {
+  background: var(--lab-gradient);
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+}
+.observation-card tr:nth-child(even) {
+  background: #f8fbff;
+}
+.graph-card {
+  text-align: center;
+  padding-bottom: 2rem;
+}
+#report-graph {
+  width: 100%;
+  min-height: 360px;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+.vl-footer {
+  background: var(--lab-gradient);
+  color: #e2e8f0;
+  padding: 1.25rem 0;
+  box-shadow: 0 -10px 30px rgba(2, 26, 44, 0.5);
+  text-align: center;
+}
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 768px) {
+  .top-nav { display: flex; flex-wrap: wrap; }
+  .report-top { flex-direction: column; align-items: flex-start; }
+  .report-toolbar { width: 100%; justify-content: flex-start; }
 }
 @media print {
-  .print-btn,
-  .download-btn,
-  .report-actions { display:none; }
-  body { margin:0; box-shadow:none; border:none; padding:0; }
+  .vl-header, .report-toolbar, .btn, .nav-link { display: none; }
+  body { background: #fff; margin: 0; }
+  .report-container { border: none; box-shadow: none; margin: 0; border-radius: 0; }
 }
     `;
 
@@ -2033,13 +2201,89 @@ tr:nth-child(even) { background-color: #f8fbff; }
     const endTimeText = new Date(endTime).toLocaleTimeString();
     const durationMs = Math.max(0, endTime - sessionStart);
     const durationTotalSeconds = Math.floor(durationMs / 1000);
-    const durationMinutes = Math.floor(durationTotalSeconds / 60);
+    const durationHours = Math.floor(durationTotalSeconds / 3600);
+    const durationMinutes = Math.floor((durationTotalSeconds % 3600) / 60);
     const durationSeconds = durationTotalSeconds % 60;
-    const durationText = `${durationMinutes} min ${String(durationSeconds).padStart(2, "0")} sec`;
+    const durationText =
+      durationHours > 0
+        ? `${durationHours} hr ${String(durationMinutes).padStart(2, "0")} min ${String(durationSeconds).padStart(2, "0")} sec`
+        : durationMinutes > 0
+        ? `${durationMinutes} min ${String(durationSeconds).padStart(2, "0")} sec`
+        : `${durationSeconds} sec`;
+    const progressState =
+      typeof window.VLProgress === "object" && typeof window.VLProgress.getState === "function"
+        ? window.VLProgress.getState()
+        : {};
+    const userState = progressState.user || {};
+    const userNameValue = (userState.name || "Not recorded").trim() || "Not recorded";
+    const userEmailValue = (userState.email || "Not recorded").trim() || "Not recorded";
+    const userDesignationValue = (userState.designation || "Not recorded").trim() || "Not recorded";
+    const generatedOnText = now.toLocaleString();
+
+    function formatTimestamp(value) {
+      if (!value) return null;
+      const numeric = Number(value);
+      const date = Number.isFinite(numeric) ? new Date(numeric) : new Date(value);
+      if (!date || Number.isNaN(date.getTime())) return null;
+      return date.toLocaleString();
+    }
+
+    function getAssessmentData(type) {
+      try {
+        const activeHash = localStorage.getItem("vlab_exp2_active_user_hash") || "";
+        const candidates = [];
+        if (activeHash) {
+          candidates.push({
+            score: `vlab_exp2_user_${activeHash}_${type}_score`,
+            total: `vlab_exp2_user_${activeHash}_${type}_total`,
+            updated: `vlab_exp2_user_${activeHash}_${type}_updated_at`
+          });
+        }
+        candidates.push({
+          score: `vlab_exp2_${type}_score`,
+          total: `vlab_exp2_${type}_total`,
+          updated: `vlab_exp2_${type}_updated_at`
+        });
+
+        for (const candidate of candidates) {
+          const score = ((localStorage.getItem(candidate.score) || "").trim()) || null;
+          const total = ((localStorage.getItem(candidate.total) || "").trim()) || null;
+          const updatedAt = ((localStorage.getItem(candidate.updated) || "").trim()) || null;
+          if (score || total || updatedAt) {
+            return { score, total, updatedAt };
+          }
+        }
+      } catch (err) {
+        // ignore storage errors
+      }
+      return null;
+    }
+
+    function renderAssessmentRow(title, data) {
+      const hasValues = !!(data && (data.score || data.total || data.updatedAt));
+      const scoreDisplay = hasValues ? `${data.score || "0"} / ${data.total || "0"}` : "Not recorded";
+      const updatedDisplay = data?.updatedAt
+        ? formatTimestamp(data.updatedAt) || data.updatedAt
+        : "Not available";
+
+      return `
+        <tr>
+          <td>${escapeHtml(title)}</td>
+          <td>${escapeHtml(scoreDisplay)}</td>
+          <td>${escapeHtml(updatedDisplay)}</td>
+        </tr>
+      `;
+    }
+
+    const pretestData = getAssessmentData("pretest");
+    const posttestData = getAssessmentData("posttest");
     if (typeof window.labTracking?.markSimulationEnd === "function") {
       window.labTracking.markSimulationEnd(endTime);
     }
     window.labTracking?.recordStep?.("Simulation report generated");
+
+    const iitLogoUrl = new URL("../images/IIT Logo.png", window.location.href).toString();
+    const vlLogoUrl = new URL("../images/image.png", window.location.href).toString();
 
     const html = `
 <!DOCTYPE html>
@@ -2052,9 +2296,9 @@ tr:nth-child(even) { background-color: #f8fbff; }
 </head>
 <body id="report-root">
 <div class="header-row">
-  <img src="../images/IIT Logo.png" class="vl-logo" />
+  <img src="${iitLogoUrl}" class="vl-logo" />
   <h1>Virtual Labs Simulation Report</h1>
-  <img src="../images/image.png" class="vl-logo" />
+  <img src="${vlLogoUrl}" class="vl-logo" />
 </div>
 
   <div class="section">

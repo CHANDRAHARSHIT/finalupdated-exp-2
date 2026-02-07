@@ -1111,7 +1111,7 @@ function checkAnswers() {
   totalAttempted += setTotal;
   persistAssessmentTotals();
 
-  result.innerHTML = `Set Score: ${score} / ${setTotal} • Overall: ${totalCorrect} / ${totalAttempted}`;
+  result.innerHTML = `Set Score: ${score} / ${setTotal} • Overall Score: ${totalCorrect} / ${totalAttempted}`;
   result.classList.remove("text-green-600", "text-red-600");
   result.classList.add(score === setTotal ? "text-green-600" : "text-red-600");
 
