@@ -2465,10 +2465,40 @@
   }
 
   function resetAll() {
-    try { localStorage.removeItem(KEY); } catch {}
+    // Clear ALL localStorage items that start with "vlab_exp2_"
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("vlab_exp2_")) {
+          keysToRemove.push(key);
+        }
+      }
+      // Remove all collected keys
+      for (const key of keysToRemove) {
+        localStorage.removeItem(key);
+      }
+    } catch {}
+
+    // Clear all session storage keys
     try {
       sessionStorage.removeItem("vlab_exp2_current_page");
       sessionStorage.removeItem("vlab_exp2_page_enter_ms");
+    } catch {}
+
+    // Clear window.name user data
+    try {
+      const WINDOW_NAME_PREFIX = "VLAB_EXP2::";
+      if (typeof window.name === "string" && window.name.startsWith(WINDOW_NAME_PREFIX)) {
+        const wn = JSON.parse(window.name.slice(WINDOW_NAME_PREFIX.length)) || {};
+        delete wn.vlab_exp2_user_name;
+        delete wn.vlab_exp2_user_email;
+        delete wn.vlab_exp2_user_designation;
+        delete wn.vlab_exp2_user_submitted_at;
+        delete wn.vlab_exp2_simulation_report_html;
+        delete wn.vlab_exp2_simulation_report_updated_at;
+        window.name = WINDOW_NAME_PREFIX + JSON.stringify(wn);
+      }
     } catch {}
   }
 

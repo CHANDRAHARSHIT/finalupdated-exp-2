@@ -341,28 +341,28 @@
   }
 
   function resetAll() {
-    let activeHash = "";
-    try { activeHash = localStorage.getItem("vlab_exp2_active_user_hash") || ""; } catch {}
+    // Clear ALL localStorage items that start with "vlab_exp2_"
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("vlab_exp2_")) {
+          keysToRemove.push(key);
+        }
+      }
+      // Remove all collected keys
+      for (const key of keysToRemove) {
+        localStorage.removeItem(key);
+      }
+    } catch {}
 
-    // remove main state
-    try { localStorage.removeItem(KEY); } catch {}
-
-    // remove active hash
-    try { localStorage.removeItem("vlab_exp2_active_user_hash"); } catch {}
-
-    // remove general keys
-    clearGeneralProgressKeys();
-
-    // remove current user-scoped keys for assessments + simulation report
-    removeUserScopedProgress(activeHash);
-
-    // session keys
+    // Clear all session storage keys
     try {
       sessionStorage.removeItem("vlab_exp2_current_page");
       sessionStorage.removeItem("vlab_exp2_page_enter_ms");
     } catch {}
 
-    // window.name user data
+    // Clear window.name user data
     try {
       const wn = loadWindowNameData();
       delete wn.vlab_exp2_user_name;

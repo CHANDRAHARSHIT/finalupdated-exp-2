@@ -188,9 +188,9 @@
  
       </div>
       <div class="flex flex-wrap gap-2">
-        <button id="printBtn" class="px-4 py-2 rounded-lg font-semibold text-white shadow-md shadow-slate-900/30 bg-gradient-to-r from-[#021a2c] via-[#064073] to-[#0b60a8] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Print</button>
-        <button id="downloadBtn" class="px-4 py-2 rounded-lg font-semibold text-white shadow-md shadow-slate-900/25 bg-gradient-to-r from-[#021a2c] via-[#064073] to-[#0b60a8] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Download</button>
-        <button id="resetBtn" class="px-4 py-2 rounded-lg font-semibold border border-[#0b60a8] text-[#0b60a8] bg-white hover:bg-slate-50 hover:border-[#064073] shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Reset Data</button>
+        <button type="button" id="printBtn" class="px-4 py-2 rounded-lg font-semibold text-white shadow-md shadow-slate-900/30 bg-gradient-to-r from-[#021a2c] via-[#064073] to-[#0b60a8] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Print</button>
+        <button type="button" id="downloadBtn" class="px-4 py-2 rounded-lg font-semibold text-white shadow-md shadow-slate-900/25 bg-gradient-to-r from-[#021a2c] via-[#064073] to-[#0b60a8] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Download</button>
+        <button type="button" id="resetBtn" class="px-4 py-2 rounded-lg font-semibold border border-[#0b60a8] text-[#0b60a8] bg-white hover:bg-slate-50 hover:border-[#064073] shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b60a8]">Reset Data</button>
       </div>
     </div>
 
@@ -216,7 +216,7 @@
         <button type="button" class="modal-close-btn modal-secondary-btn" data-report-alert-no>No</button>
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-actions" data-report-alert-ok-action>
         <button type="button" class="modal-close-btn" data-report-alert-close>OK</button>
       </div>
     </div>
@@ -233,6 +233,7 @@
     const reportAlertMessage = document.getElementById("reportAlertMessage");
     const reportAlertClose = reportAlertModal?.querySelector("[data-report-alert-close]");
     const reportAlertActions = reportAlertModal?.querySelector("[data-report-alert-actions]");
+    const reportAlertOkAction = reportAlertModal?.querySelector("[data-report-alert-ok-action]");
     const reportAlertYes = reportAlertModal?.querySelector("[data-report-alert-yes]");
     const reportAlertNo = reportAlertModal?.querySelector("[data-report-alert-no]");
 
@@ -275,7 +276,7 @@
       reportAlertOnNo = typeof opts.onNo === "function" ? opts.onNo : null;
       reportAlertMode = opts.mode === "confirm" ? "confirm" : "alert";
 
-      if (reportAlertActions) reportAlertActions.hidden = reportAlertMode !== "confirm";
+      if (reportAlertOkAction) reportAlertOkAction.hidden = reportAlertMode === "confirm"
       if (reportAlertClose) reportAlertClose.classList.toggle("hidden", reportAlertMode === "confirm");
 
       reportAlertModal.classList.add("show");
@@ -566,11 +567,37 @@
     printBtn?.addEventListener("click", () => window.print());
     downloadBtn?.addEventListener("click", downloadReport);
     resetBtn?.addEventListener("click", () => {
+      console.log("Reset button clicked");
+      
+      if (!window.VLProgress || typeof VLProgress.resetAll !== "function") {
+        showReportAlert("Reset function is not available. Please refresh the page and try again.", "Error");
+        return;
+      }
+      
       showReportAlert("Reset all saved user data, assessments, timings, and simulation report?", "Confirm Reset", {
         mode: "confirm",
         onYes: () => {
-          VLProgress.resetAll();
-          showReportAlert("Reset done. Redirecting to Aim page.", "Reset Complete", { onClose: navigateToAim });
+          console.log("Reset confirmed by user");
+          try {
+            VLProgress.resetAll();
+            console.log("Reset completed successfully");
+            showReportAlert("All data has been reset successfully. Redirecting to Aim page...", "Reset Complete", { 
+              onClose: () => {
+                console.log("Navigating to Aim page");
+                setTimeout(() => navigateToAim(), 100);
+              } 
+            });
+          } catch (error) {
+            console.error("Reset failed:", error);
+            showReportAlert("Reset completed with warnings. Redirecting to Aim page...", "Notice", { 
+              onClose: () => {
+                setTimeout(() => navigateToAim(), 100);
+              }
+            });
+          }
+        },
+        onNo: () => {
+          console.log("Reset cancelled by user");
         }
       });
     });
