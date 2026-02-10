@@ -1930,6 +1930,21 @@ document.addEventListener("keydown", (e) => {
     });
 
     const now = new Date();
+    // Ensure all relative assets resolve correctly inside the new report window and in html2canvas.
+    const baseHref =
+      (() => {
+        try {
+          const link = document.createElement("a");
+          link.href = window.location.href;
+          // strip file name, keep trailing slash
+          link.pathname = link.pathname.replace(/[^/]*$/, "");
+          return link.href;
+        } catch (e) {
+          return document.baseURI || window.location.href;
+        }
+      })();
+    const logoLeftSrc = new URL("../images/IIT Logo.png", baseHref).toString();
+    const logoRightSrc = new URL("../images/image.png", baseHref).toString();
     const css = `
 body {
   font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -2090,14 +2105,15 @@ tr:nth-child(even) { background-color: #f8fbff; }
 <head>
   <meta charset="UTF-8">
   <title>Simulation Report</title>
+  <base href="${baseHref}">
   <style>${css}</style>
   <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
 </head>
 <body id="report-root">
 <div class="header-row">
-  <img src="../images/IIT Logo.png" class="vl-logo" />
+  <img src="${logoLeftSrc}" class="vl-logo" />
   <h1>Virtual Labs Simulation Report</h1>
-  <img src="../images/image.png" class="vl-logo" />
+  <img src="${logoRightSrc}" class="vl-logo" />
 </div>
 
   <div class="section">
@@ -2271,7 +2287,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
     }
     showPopup(
       "Report will open in a new tab. Please allow pop-ups.",
-      "Opening Report"
+      "Report Ready"
     );
     if (speechIsActive()) {
       speak("Opening the report in a new tab. Please allow pop ups.");
@@ -2302,7 +2318,7 @@ tr:nth-child(even) { background-color: #f8fbff; }
       return;
     }
     if (!readingArmed) {
-      speakOrAlert("Change the bulb selection to add the next reading.");
+      speakOrAlert("This reading is already added to the table. Please choose a different load.");
       return;
     }
     if (readingsRecorded.length >= 10) {
@@ -2313,11 +2329,11 @@ tr:nth-child(even) { background-color: #f8fbff; }
     const load = selectedIndex + 1;
     if (readingsRecorded.some((reading) => reading.load === load)) {
       showPopup(
-        "This bulb load already exists in the table. Choose a different load.",
+        "This reading is already added to the table. Please choose a different load.",
         "Duplicate Reading"
       );
       if (speechIsActive()) {
-        speak("This bulb load is already recorded. Choose a different load value.");
+        speak("This reading is already added to the table. Please choose a different load.");
       }
       readingArmed = false;
       return;
