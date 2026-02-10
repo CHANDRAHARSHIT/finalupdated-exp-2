@@ -415,7 +415,7 @@ h3 {
   transform-origin: center;
 }
 .meter-card .ammeter-img {
-  transform: scale(1.2);
+  transform: scale(1.3);
   transform-origin: center;
 }
 
@@ -475,18 +475,25 @@ h3 {
   transform: translate(-50%, -82.5%) rotate(-49deg);
 }
 
-.meter-needle1 img,
-.meter-needle2 img,
-.meter-needle3 img,
-.meter-needle4 img {
+
+
+.meter-needle3 img, .meter-needle4 img
+ {
   width: 100%;
-  height: 60px;
+  height: 54px;
   display: block;
   object-fit: contain;
   border-radius: 0;
   transform: none;
 }
-
+.meter-needle1 img, .meter-needle2 img {
+  width: 100%;
+  height: 58px;
+  display: block;
+  object-fit: contain;
+  border-radius: 0;
+  transform: none;
+}
 /* =========================
    SPEAKING (HIGHLIGHTS)
  ========================= */

@@ -225,6 +225,48 @@ function closeModal() {
   }
 }
 
+function waitForWarningModalAcknowledgement() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("warningModal");
+    if (!modal) {
+      resolve();
+      return;
+    }
+
+    const closeBtn = modal.querySelector("[data-modal-close]");
+    let resolved = false;
+    let observer = null;
+    const cleanup = () => {
+      if (resolved) return;
+      resolved = true;
+      closeBtn?.removeEventListener("click", onClose);
+      modal.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onEsc);
+      observer?.disconnect();
+      resolve();
+    };
+
+    const onClose = () => cleanup();
+    const onBackdrop = (event) => {
+      if (event.target === modal) cleanup();
+    };
+    const onEsc = (event) => {
+      if (event.key === "Escape") cleanup();
+    };
+
+    closeBtn?.addEventListener("click", onClose, { once: true });
+    modal.addEventListener("click", onBackdrop, { once: true });
+    document.addEventListener("keydown", onEsc, { once: true });
+
+    observer = new MutationObserver(() => {
+      if (!modal.classList.contains("show")) {
+        cleanup();
+      }
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
+  });
+}
+
 function isModalOpen() {
   const modal = document.getElementById("warningModal");
   return !!(modal && modal.classList.contains("show"));
@@ -391,7 +433,7 @@ function setupJsPlumb() {
   }
   const BOTTOM_ANCHOR = [0.5, 1, 0, 1];
   // anchors for each point (you can tweak these)
-  const anchors = {
+   const anchors = {
     pointR: BOTTOM_ANCHOR,
     pointB: BOTTOM_ANCHOR,
 
@@ -412,11 +454,12 @@ function setupJsPlumb() {
     pointZ3: [1, 0.5, 1, 0],
     pointA2: [0, 0.5, -1, 0],
     pointZ2: [1, 0.5, 1, 0],
-    pointA4: [0, 0.5, -1, 0],
+    pointA4: [BOTTOM_ANCHOR, [0, 0.5, -1, 0]], // prefer downward entry for the L2 → A4 U-turn
     pointZ4: [1, 0.5, 1, 0],
     pointL1: [0, 0.5, -1, 0],
-    pointL2: [1, 0.5, 1, 0],
+    pointL2: BOTTOM_ANCHOR, // force L2 to drop straight down before curving toward A4
   };
+
   const WIRE_COLORS = {
     blue: "rgba(0, 0, 255)",
     red: "rgb(255, 0, 0)",
@@ -517,7 +560,7 @@ function setupJsPlumb() {
     [connectionKey("pointB", "pointG"), 130],
     [connectionKey("pointL", "pointD"), 90],
     [connectionKey("pointL1", "pointJ"), -150],
-    [connectionKey("pointL2", "pointA4"), -180],
+    [connectionKey("pointL2", "pointA4"), -120],
     [connectionKey("pointZ4", "pointK"), 60],
      
 
@@ -1544,11 +1587,11 @@ window.addEventListener(MCB_TURNED_ON_EVENT, () => {
 const NEEDLE_TRANSFORM_TRANSLATE = "translate(-50%, -82.5%)";
 
 // Calibrated for the 0-30 A ammeters and 0-410 V voltmeters used in this lab.
-const AMMETER_MIN_ANGLE = -73.4;
+const AMMETER_MIN_ANGLE = -69;
 const AMMETER_MID_ANGLE = 0;
 const AMMETER_MAX_ANGLE = 91.4;
 
-const VOLTMETER_MIN_ANGLE = -70.6;
+const VOLTMETER_MIN_ANGLE = -76;
 const VOLTMETER_MID_ANGLE = 0;
 const VOLTMETER_MAX_ANGLE = 86.6;
 
@@ -1643,8 +1686,8 @@ document.addEventListener("keydown", (e) => {
   const ammeter2Readings = [1.2, 2.8, 3.2, 3.6, 5.5, 7, 8.1, 10.2, 11, 12.7];
   const voltmeter2Readings = [220, 212, 208, 205, 200, 195, 189, 184, 179, 176];
   // Optional manual needle angles (degrees) per bulb index; edit as needed.
-  const ammeter1ManualAngles = [-62, -60.4, -50.1, -47.5, -42.0, -32.1, -26.0, -15.9, -6.3, 2.8];
-  const ammeter2ManualAngles = [-69.1, -59.2, -59.0, -57.9, -52.6, -48.8, -44.8, -32.0, -29, -20];
+  const ammeter1ManualAngles = [-58.5, -55.4, -46.1, -41, -34.8, -26.2, -18.6, -11, -2.5, 2];
+  const ammeter2ManualAngles = [-63.1, -58.9, -57, -54.9, -46.8, -38.7, -33.8, -24.0, -20, -13];
   // Override voltmeter-1 dial to land on ~225 V once starter is on.
   const voltmeter1ManualAngles = [5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5];
   const voltmeter2ManualAngles = [0.3, -6.2, -7.5, -7.7, -7.9, -7.8, -7.4, -6.8, -14.9, -15.7];
@@ -1888,311 +1931,143 @@ document.addEventListener("keydown", (e) => {
 
     const now = new Date();
     const css = `
-:root {
-  --lab-gradient: linear-gradient(120deg, #021a2c, #064073, #0b60a8);
-  --lab-gradient-soft: linear-gradient(140deg, #eef2ff, #f8fbff);
-  --text-dark: #0f172a;
-  --text-muted: #475569;
-  --border-muted: rgba(15, 23, 42, 0.08);
-}
-* {
-  box-sizing: border-box;
-}
 body {
-  margin: 0;
   font-family: 'Inter', 'Segoe UI', sans-serif;
-  background: linear-gradient(145deg, #e0e7ff, #f8fafc);
-  color: var(--text-dark);
-  min-height: 100vh;
+  background: #f3f6fb;
+  color: #1f2d3d;
+  margin: 40px auto;
+  max-width: 960px;
+  padding: 32px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e9f2;
+  box-shadow: 0 10px 30px rgba(31, 45, 61, 0.12);
+  line-height: 1.65;
 }
-.vl-header {
-  height: 70px;
-  background: var(--lab-gradient);
-  box-shadow: 0 10px 30px rgba(2, 26, 44, 0.35);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 50;
+h1, h2, h3 { color: #1f2d3d; margin-top: 0; font-weight: 700; }
+h1 {
+  font-size: 28px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #2f7bfa;
 }
-.header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-}
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  color: #fff;
-  text-decoration: none;
-}
-.logo-container img {
-  height: 48px;
+h2 { font-size: 22px; margin-bottom: 10px; color: #2b3f55; }
+h3 { font-size: 18px; margin-bottom: 8px; }
+.section {
+  background: linear-gradient(135deg, #f8fbff 0%, #f3f6fb 100%);
+  padding: 20px 22px;
+  margin-bottom: 28px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid #e5e9f2;
+  box-shadow: 0 4px 12px rgba(31,45,61,0.06);
 }
-.logo-title {
-  font-size: 1.15rem;
-  margin: 0;
-  letter-spacing: 0.04em;
-}
-.logo-subtitle {
-  margin: 0;
-  font-size: 0.75rem;
-  color: #d3d8f4;
-}
-.top-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.nav-link {
-  position: relative;
-  color: #e2e8f0;
-  font-weight: 600;
-  padding: 0.4rem 0.9rem;
-  border-radius: 0.35rem;
-  text-decoration: none;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-.nav-link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -6px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--lab-gradient);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.2s ease;
-}
-.nav-link:hover,
-.nav-link:focus {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-1px);
-}
-.nav-link:hover::after,
-.nav-link:focus::after {
-  transform: scaleX(1);
-}
-.report-container {
-  max-width: 1120px;
-  margin: 110px auto 60px;
-  padding: 2.75rem 1.5rem 3rem;
-  background: #f8fbff;
-  border-radius: 1.8rem;
-  border: 1px solid rgba(14, 165, 233, 0.15);
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.15);
-  position: relative;
-}
-.report-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.95rem;
-  border-radius: 999px;
-  background: #e6efff;
-  color: #0f62d0;
-  letter-spacing: 0.2em;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-}
-.report-title {
-  margin: 0.35rem 0 0;
-  font-size: 2.4rem;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-.report-subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--text-muted);
-  font-size: 1rem;
-}
-.report-toolbar {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-.btn {
-  border: none;
-  border-radius: 999px;
-  padding: 0.85rem 1.65rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.btn.primary {
-  background: var(--lab-gradient);
-  color: #fff;
-  box-shadow: 0 12px 28px rgba(2, 26, 44, 0.25);
-}
-.btn.secondary {
-  background: linear-gradient(120deg, #1d4ed8, #06b6d4);
-  color: #fff;
-}
-.btn.outline {
-  background: #fff;
-  color: #0b60a8;
-  border: 1px solid rgba(11, 96, 168, 0.8);
-}
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
-}
-.report-card {
-  background: #fff;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  padding: 1.9rem;
-  margin-top: 1.75rem;
-  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
-}
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-.card-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-.tag {
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  background: #eef2ff;
-  color: #1d4ed8;
-  border: 1px solid #cdd5e4;
-}
-.tag.subtle {
-  background: #dbeafe;
-  border-color: #bfdbfe;
-}
+.label { font-weight: 600; color: #1f2d3d; }
+ul { padding-left: 20px; margin-top: 10px; }
+.two-column-list { column-count: 2; column-gap: 40px; list-style-position: inside; margin-top: 10px; }
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  gap: 12px;
+  margin-top: 12px;
 }
-.info-block {
-  background: var(--lab-gradient-soft);
-  border-radius: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border-muted);
+.info-card {
+  background: #fff;
+  border: 1px solid #e5e9f2;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 10px rgba(31,45,61,0.05);
+  font-size: 14px;
 }
-.info-block .label {
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  box-shadow: 0 2px 10px rgba(31, 45, 61, 0.06);
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th, td {
+  border: 1px solid #e5e9f2;
+  padding: 12px;
+  text-align: center;
+  font-size: 15px;
+}
+th {
+  background: linear-gradient(135deg, #2f7bfa 0%, #1f62d0 100%);
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+tr:nth-child(even) { background-color: #f8fbff; }
+.graph {
+  text-align: center;
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #e5e9f2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(31,45,61,0.06);
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+.header-row h1 {
+  flex: 1;
+  text-align: center;
   margin: 0;
 }
-.info-block .info-value {
-  margin-top: 0.35rem;
-  font-size: 1rem;
+.badge {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #e8f1ff;
+  color: #1f62d0;
   font-weight: 600;
-  color: var(--text-dark);
+  font-size: 13px;
 }
-.summary-card ul {
-  list-style: none;
-  padding: 0;
-  columns: 2;
-  gap: 0.5rem;
+.vl-logo {
+  height: 100px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
-.summary-card li {
-  margin-bottom: 0.35rem;
-  color: var(--text-muted);
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
 }
-.table-wrapper {
-  overflow-x: auto;
+.print-btn,
+.download-btn {
+  padding: 12px 24px;
+  font-size: 15px;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
-.assessment-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.6rem;
+.print-btn {
+  background: linear-gradient(to right, #2f7bfa, #1f62d0);
 }
-.assessment-table th,
-.assessment-table td {
-  padding: 0.9rem 1.1rem;
-  text-align: left;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  font-size: 0.95rem;
+.download-btn {
+  background: linear-gradient(to right, #28a745, #1f8d38);
 }
-.assessment-table th {
-  background: linear-gradient(120deg, #e0e7ff, #c7d2fe);
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-}
-.observation-card table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-.observation-card th,
-.observation-card td {
-  padding: 0.85rem 1rem;
-  text-align: center;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  font-size: 0.95rem;
-}
-.observation-card th {
-  background: var(--lab-gradient);
-  color: #fff;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-}
-.observation-card tr:nth-child(even) {
-  background: #f8fbff;
-}
-.graph-card {
-  text-align: center;
-  padding-bottom: 2rem;
-}
-#report-graph {
-  width: 100%;
-  min-height: 360px;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 24px rgba(15, 23, 42, 0.12);
-}
-.vl-footer {
-  background: var(--lab-gradient);
-  color: #e2e8f0;
-  padding: 1.25rem 0;
-  box-shadow: 0 -10px 30px rgba(2, 26, 44, 0.5);
-  text-align: center;
-}
-.footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-@media (max-width: 768px) {
-  .top-nav { display: flex; flex-wrap: wrap; }
-  .report-top { flex-direction: column; align-items: flex-start; }
-  .report-toolbar { width: 100%; justify-content: flex-start; }
+.print-btn:hover,
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(31,45,61,0.12);
 }
 @media print {
-  .vl-header, .report-toolbar, .btn, .nav-link { display: none; }
-  body { background: #fff; margin: 0; }
-  .report-container { border: none; box-shadow: none; margin: 0; border-radius: 0; }
+  .print-btn,
+  .download-btn,
+  .report-actions { display:none; }
+  body { margin:0; box-shadow:none; border:none; padding:0; }
 }
     `;
 
@@ -2201,89 +2076,13 @@ body {
     const endTimeText = new Date(endTime).toLocaleTimeString();
     const durationMs = Math.max(0, endTime - sessionStart);
     const durationTotalSeconds = Math.floor(durationMs / 1000);
-    const durationHours = Math.floor(durationTotalSeconds / 3600);
-    const durationMinutes = Math.floor((durationTotalSeconds % 3600) / 60);
+    const durationMinutes = Math.floor(durationTotalSeconds / 60);
     const durationSeconds = durationTotalSeconds % 60;
-    const durationText =
-      durationHours > 0
-        ? `${durationHours} hr ${String(durationMinutes).padStart(2, "0")} min ${String(durationSeconds).padStart(2, "0")} sec`
-        : durationMinutes > 0
-        ? `${durationMinutes} min ${String(durationSeconds).padStart(2, "0")} sec`
-        : `${durationSeconds} sec`;
-    const progressState =
-      typeof window.VLProgress === "object" && typeof window.VLProgress.getState === "function"
-        ? window.VLProgress.getState()
-        : {};
-    const userState = progressState.user || {};
-    const userNameValue = (userState.name || "Not recorded").trim() || "Not recorded";
-    const userEmailValue = (userState.email || "Not recorded").trim() || "Not recorded";
-    const userDesignationValue = (userState.designation || "Not recorded").trim() || "Not recorded";
-    const generatedOnText = now.toLocaleString();
-
-    function formatTimestamp(value) {
-      if (!value) return null;
-      const numeric = Number(value);
-      const date = Number.isFinite(numeric) ? new Date(numeric) : new Date(value);
-      if (!date || Number.isNaN(date.getTime())) return null;
-      return date.toLocaleString();
-    }
-
-    function getAssessmentData(type) {
-      try {
-        const activeHash = localStorage.getItem("vlab_exp2_active_user_hash") || "";
-        const candidates = [];
-        if (activeHash) {
-          candidates.push({
-            score: `vlab_exp2_user_${activeHash}_${type}_score`,
-            total: `vlab_exp2_user_${activeHash}_${type}_total`,
-            updated: `vlab_exp2_user_${activeHash}_${type}_updated_at`
-          });
-        }
-        candidates.push({
-          score: `vlab_exp2_${type}_score`,
-          total: `vlab_exp2_${type}_total`,
-          updated: `vlab_exp2_${type}_updated_at`
-        });
-
-        for (const candidate of candidates) {
-          const score = ((localStorage.getItem(candidate.score) || "").trim()) || null;
-          const total = ((localStorage.getItem(candidate.total) || "").trim()) || null;
-          const updatedAt = ((localStorage.getItem(candidate.updated) || "").trim()) || null;
-          if (score || total || updatedAt) {
-            return { score, total, updatedAt };
-          }
-        }
-      } catch (err) {
-        // ignore storage errors
-      }
-      return null;
-    }
-
-    function renderAssessmentRow(title, data) {
-      const hasValues = !!(data && (data.score || data.total || data.updatedAt));
-      const scoreDisplay = hasValues ? `${data.score || "0"} / ${data.total || "0"}` : "Not recorded";
-      const updatedDisplay = data?.updatedAt
-        ? formatTimestamp(data.updatedAt) || data.updatedAt
-        : "Not available";
-
-      return `
-        <tr>
-          <td>${escapeHtml(title)}</td>
-          <td>${escapeHtml(scoreDisplay)}</td>
-          <td>${escapeHtml(updatedDisplay)}</td>
-        </tr>
-      `;
-    }
-
-    const pretestData = getAssessmentData("pretest");
-    const posttestData = getAssessmentData("posttest");
+    const durationText = `${durationMinutes} min ${String(durationSeconds).padStart(2, "0")} sec`;
     if (typeof window.labTracking?.markSimulationEnd === "function") {
       window.labTracking.markSimulationEnd(endTime);
     }
     window.labTracking?.recordStep?.("Simulation report generated");
-
-    const iitLogoUrl = new URL("../images/IIT Logo.png", window.location.href).toString();
-    const vlLogoUrl = new URL("../images/image.png", window.location.href).toString();
 
     const html = `
 <!DOCTYPE html>
@@ -2296,9 +2095,9 @@ body {
 </head>
 <body id="report-root">
 <div class="header-row">
-  <img src="${iitLogoUrl}" class="vl-logo" />
+  <img src="../images/IIT Logo.png" class="vl-logo" />
   <h1>Virtual Labs Simulation Report</h1>
-  <img src="${vlLogoUrl}" class="vl-logo" />
+  <img src="../images/image.png" class="vl-logo" />
 </div>
 
   <div class="section">
@@ -2477,8 +2276,9 @@ body {
     if (speechIsActive()) {
       speak("Opening the report in a new tab. Please allow pop ups.");
     }
-    // Slight delay so the alert is visible before the new tab steals focus
-    setTimeout(() => generateReport(), 250);
+    waitForWarningModalAcknowledgement().then(() => {
+      generateReport();
+    });
   }
 
   function addRowToTable(idx) {
