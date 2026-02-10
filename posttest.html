@@ -787,7 +787,9 @@
     <div class="modal-box danger" role="document">
       <h2 id="modalTitle">Alert</h2>
       <p id="modalMessage"></p>
-      <button type="button" class="modal-close-btn" data-modal-close>OK</button>
+      <div class="modal-actions">
+        <button type="button" class="modal-close-btn" data-modal-close>OK</button>
+      </div>
     </div>
   </div>
 
@@ -1132,7 +1134,9 @@ checkBtn.addEventListener("click", () => {
 });
 
 /* ------------------ INITIALIZE ------------------ */
+const posttestWelcomeMessage = "Here, you will receive 5 questions at a time. Each time you click on the Refresh button, a new set of questions will be generated. Please note that all your attempted questions will be recorded and reflected in your Progress Report if you choose to generate it.";
 pickRandomSet();
+showPopup(posttestWelcomeMessage, "Welcome to the Posttest section");
 </script>
 
 <!-- CHATBOT WIDGET -->

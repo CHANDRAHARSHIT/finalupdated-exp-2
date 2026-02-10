@@ -2579,52 +2579,52 @@ tr:nth-child(even) { background-color: #f8fbff; }
         {
           id: "mcb",
           selector: ".mcb-toggle, .mcb-block img",
-          text: "MCB: Main supply breaker for the setup; trips on overload/short-circuit to protect the circuit and users."
+          text: "Purpose: To ensure the safety of equipment and users by tripping during electrical faults."
         },
         {
           id: "starter",
           selector: ".starter-body, .starter-handle",
-        text: "3-Point Starter: Limits the DC motor starting current and provides no-volt/overload protection; drag the handle after turning ON the MCB."
+        text: "Purpose: Limits the starting current of a DC motor by using external armature resistance, which is cut out as the motor speeds up, and provides overload and no-voltage protection."
       },
       {
         id: "lamp-load",
         selector: ".lamp-bulb",
-        text: "Lamp Load: Variable resistive bulb bank used to change load; select the number of bulbs to vary current and observe voltage regulation."
+        text: "Purpose: It helps in observing how the terminal voltage varies with the load current."
       },
       {
         id: "ammeter-1",
         selector: ".meter-card:nth-of-type(1) > img",
-        text: "Ammeter-1: Measures the motor/supply current (connected in series)."
+        text: "Purpose: To measure the current drawn by the DC shunt motor during operation."
       },
       {
         id: "voltmeter-1",
         selector: ".meter-card:nth-of-type(2) > img",
-        text: "Voltmeter-1: Measures the supply/line voltage (connected across the source)."
+        text: "Purpose:  To measure the voltage of the main supply."
       },
       {
         id: "ammeter-2",
         selector: ".meter-card:nth-of-type(3) > img",
-        text: "Ammeter-2: Measures the load current through the lamp load (connected in series with the load)."
+        text: "Purpose:  To measure the load current (IL) delivered by the DC shunt generator."
       },
       {
         id: "voltmeter-2",
         selector: ".meter-card:nth-of-type(4) > img",
-        text: "Voltmeter-2: Measures the generator terminal voltage (connected across generator terminals)."
+        text: "Purpose: It is connected in parallel across the generator terminals to measure the terminal voltage (V) of the DC shunt generator."
       },
       {
         id: "dc-motor",
         selector: ".motor-box > img",
-        text: "DC Shunt Motor: Prime mover converting electrical power to mechanical power to drive the generator."
+        text: "Purpose: It acts as a prime mover, converting electrical energy into mechanical energy to drive the DC shunt generator."
       },
       {
         id: "coupler",
         selector: ".coupler > img",
-        text: "Coupling/Shaft: Mechanical link that transfers torque from the motor to the generator."
+        text: "Purpose: The shaft is used to mechanically couple the DC shunt motor with the DC shunt generator."
       },
       {
         id: "dc-generator",
         selector: ".generator-body, .generator-rotor",
-        text: "DC Shunt Generator: Converts mechanical power from the motor into DC output for the load; terminal voltage is measured on Voltmeter-2."
+        text: "Purpose: It converts the mechanical energy received from the motor into electrical energy and supplies power to the load for studying the load characteristics of a DC shunt generator."
       },
       // {
       //   id: "output-graph",
